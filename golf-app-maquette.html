@@ -1,0 +1,1058 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Golf App — Maquette interactive</title>
+<meta name="description" content="Maquette interactive de Golf App : cartographie des golfs, compétitions et contenus exclusifs. Données de démonstration.">
+<style>
+/* =========================================================
+   Design tokens
+   ========================================================= */
+:root{
+  --g900:#0A3B2C; --g800:#0F4A37; --g700:#166A4A; --g600:#1C8A5E; --g500:#25A36F;
+  --g200:#CFEAD9; --g100:#E6F3EB; --g50:#F3F8F4;
+  --gold:#C9A24B; --gold-d:#8F6B1D; --gold-l:#F7E7B8; --sand:#F4E8CB; --sand-d:#E3CF95;
+  --ink:#0E1F18; --ink2:#2B4537; --white:#FFFFFF; --line:#C9D7CF; --danger:#B4232A;
+  --ocean:#BFE0EA; --ocean-d:#7FB7C8;
+  --radius:18px; --radius-s:12px;
+  --shadow:0 10px 30px rgba(10,59,44,.14);
+  --font:"Inter","SF Pro Text","Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{
+  font-family:var(--font);color:var(--ink);
+  background:
+    radial-gradient(1200px 600px at 10% 0%, #163F31 0%, transparent 60%),
+    radial-gradient(900px 500px at 100% 100%, #1B5A42 0%, transparent 55%),
+    #0B2F24;
+  -webkit-font-smoothing:antialiased; line-height:1.4;
+}
+button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
+button:focus-visible,input:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
+svg{display:block}
+.ic{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex:none}
+
+/* =========================================================
+   Stage : pitch panel + phone
+   ========================================================= */
+.stage{
+  min-height:100%;display:flex;align-items:center;justify-content:center;
+  gap:56px;padding:40px 24px;
+}
+.pitch{color:#fff;max-width:420px}
+.pitch .brand{display:flex;align-items:center;gap:14px;margin-bottom:18px}
+.pitch .brand .logo{
+  width:56px;height:56px;border-radius:16px;background:var(--gold);display:grid;place-items:center;
+  box-shadow:0 8px 20px rgba(201,162,75,.35)
+}
+.pitch .brand .logo svg{width:30px;height:30px;stroke:var(--g900);fill:none;stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round}
+.pitch h1{font-size:40px;letter-spacing:-.02em;line-height:1.05}
+.pitch .kicker{display:inline-block;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.22);padding:6px 12px;border-radius:999px;font-size:13px;font-weight:600;margin-bottom:18px}
+.pitch .promise{font-size:20px;line-height:1.4;color:#EAF4EE;margin-bottom:28px}
+.pillars{display:grid;gap:14px}
+.pillar{display:flex;gap:14px;align-items:flex-start;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.14);border-radius:16px;padding:14px 16px}
+.pillar .pi{width:42px;height:42px;border-radius:12px;background:var(--g600);display:grid;place-items:center;flex:none}
+.pillar .pi svg{stroke:#fff}
+.pillar b{display:block;font-size:16px;margin-bottom:2px}
+.pillar span{font-size:14px;color:#D7E8DE}
+.pitch .hint{margin-top:26px;font-size:14px;color:#D7E8DE;display:flex;align-items:center;gap:8px}
+.pitch .hint svg{stroke:var(--gold)}
+
+.phone-wrap{display:flex;flex-direction:column;align-items:center;gap:14px}
+.phone{
+  width:390px;height:min(820px, calc(100vh - 90px));min-height:640px;
+  background:#0B0F0D;border-radius:52px;padding:12px;
+  box-shadow:0 40px 90px rgba(0,0,0,.55), inset 0 0 0 2px #2A2F2C;
+  position:relative;
+}
+.phone::before{ /* side buttons */
+  content:"";position:absolute;left:-3px;top:150px;width:3px;height:70px;background:#2A2F2C;border-radius:2px;box-shadow:0 100px 0 #2A2F2C
+}
+.phone::after{content:"";position:absolute;right:-3px;top:200px;width:3px;height:100px;background:#2A2F2C;border-radius:2px}
+.frame{
+  position:relative;width:100%;height:100%;border-radius:42px;overflow:hidden;background:var(--g50);
+  display:flex;flex-direction:column;
+}
+.notch{position:absolute;left:50%;top:10px;transform:translateX(-50%);width:120px;height:32px;background:#0B0F0D;border-radius:20px;z-index:30}
+.statusbar{height:50px;flex:none;display:flex;align-items:flex-end;justify-content:space-between;padding:0 26px 6px;font-size:14px;font-weight:700;color:var(--ink);position:relative;z-index:20;background:transparent}
+.statusbar .right{display:flex;gap:6px;align-items:center}
+.statusbar svg{width:18px;height:14px}
+.demo-note{color:#BBD3C6;font-size:12px;letter-spacing:.04em;text-transform:uppercase}
+
+/* =========================================================
+   Screens
+   ========================================================= */
+.screens{position:relative;flex:1;min-height:0;overflow:hidden}
+.screen{
+  position:absolute;inset:0;overflow-y:auto;overflow-x:hidden;display:none;
+  scrollbar-width:thin;scrollbar-color:var(--g200) transparent;
+}
+.screen::-webkit-scrollbar{width:6px}.screen::-webkit-scrollbar-thumb{background:var(--g200);border-radius:3px}
+.screen.active{display:block}
+.screen.in-fade{animation:fadeUp .28s ease-out both}
+.screen.in-slide{animation:slideIn .3s cubic-bezier(.2,.7,.2,1) both}
+.screen.in-back{animation:slideBack .28s cubic-bezier(.2,.7,.2,1) both}
+@keyframes fadeUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+@keyframes slideIn{from{opacity:0;transform:translateX(60px)}to{opacity:1;transform:none}}
+@keyframes slideBack{from{opacity:0;transform:translateX(-40px)}to{opacity:1;transform:none}}
+.pad{padding:0 18px}
+.sec{margin-top:22px}
+.sec-h{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:10px}
+.sec-h h3{font-size:17px;font-weight:800;letter-spacing:-.01em}
+.sec-h .link{font-size:13px;font-weight:700;color:var(--g700)}
+.topbar{display:flex;align-items:center;gap:10px;padding:6px 14px 10px;position:sticky;top:0;background:var(--g50);z-index:5}
+.topbar h2{font-size:18px;font-weight:800;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.iconbtn{width:42px;height:42px;border-radius:14px;display:grid;place-items:center;background:var(--white);border:1px solid var(--line);color:var(--ink);transition:transform .15s}
+.iconbtn:active{transform:scale(.94)}
+.iconbtn.ghost{background:rgba(255,255,255,.9);backdrop-filter:blur(6px)}
+
+/* ---------- Home / map ---------- */
+.hello{padding:4px 18px 0}
+.hello .greet{font-size:14px;font-weight:600;color:var(--ink2)}
+.hello h2{font-size:26px;font-weight:800;letter-spacing:-.02em;line-height:1.1;margin-top:2px}
+.search{margin:14px 18px 0;display:flex;align-items:center;gap:10px;background:var(--white);border:1.5px solid var(--line);border-radius:16px;padding:0 14px;height:50px;box-shadow:0 4px 14px rgba(10,59,44,.06)}
+.search input{flex:1;border:0;font:inherit;font-size:15px;color:var(--ink);background:transparent;min-width:0}
+.search input::placeholder{color:#466253}
+.chips{display:flex;gap:8px;overflow-x:auto;padding:14px 18px 4px;scrollbar-width:none}
+.chips::-webkit-scrollbar{display:none}
+.chip{flex:none;display:flex;align-items:center;gap:6px;height:38px;padding:0 14px;border-radius:999px;background:var(--white);border:1.5px solid var(--line);font-size:14px;font-weight:700;color:var(--ink);transition:all .18s}
+.chip svg{width:17px;height:17px}
+.chip.on{background:var(--g800);border-color:var(--g800);color:#fff}
+.chip:active{transform:scale(.96)}
+.map-card{margin:12px 18px 0;border-radius:var(--radius);overflow:hidden;box-shadow:var(--shadow);position:relative;background:var(--ocean)}
+.map-card svg.map{width:100%;height:auto;display:block}
+.map-legend{position:absolute;right:10px;top:10px;background:rgba(255,255,255,.94);border-radius:10px;padding:6px 10px;font-size:12px;font-weight:700;display:flex;gap:10px;align-items:center;color:var(--ink)}
+.map-legend i{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:5px;vertical-align:-1px}
+.map-legend i.p{background:var(--gold);box-shadow:0 0 0 2px #fff,0 0 0 3px var(--gold-d)}
+.map-legend i.s{background:var(--g600)}
+.pin{cursor:pointer;transition:transform .2s}
+.pin:hover{transform:translate(var(--x),var(--y)) scale(1.12)}
+.pin .body{fill:var(--g600);stroke:#fff;stroke-width:2}
+.pin.partner .body{fill:var(--gold);stroke:#fff}
+.pin.partner .ring{fill:none;stroke:var(--gold);stroke-width:2;opacity:.7;animation:pulse 2.2s ease-out infinite;transform-origin:center}
+@keyframes pulse{0%{r:6;opacity:.8}100%{r:22;opacity:0}}
+.pin.hidden{display:none}
+.town{font-size:9px;font-weight:700;fill:#1F3A2E;pointer-events:none}
+.region{font-size:11px;font-weight:800;fill:#2B6A4D;letter-spacing:.14em;opacity:.75;pointer-events:none}
+.golf-list{display:grid;gap:12px;padding:0 18px 20px}
+.gcard{display:flex;gap:12px;background:var(--white);border-radius:var(--radius);padding:10px;border:1.5px solid transparent;box-shadow:0 4px 16px rgba(10,59,44,.07);text-align:left;width:100%;transition:transform .15s,border-color .15s}
+.gcard:active{transform:scale(.985)}
+.gcard.partner{border-color:var(--gold);background:linear-gradient(180deg,#FFFDF6,#fff)}
+.gcard .thumb{width:84px;height:84px;border-radius:14px;overflow:hidden;flex:none;background:var(--g200)}
+.gcard .thumb svg{width:100%;height:100%}
+.gcard .body{flex:1;min-width:0}
+.gcard .name{font-size:16px;font-weight:800;line-height:1.2;display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+.gcard .meta{font-size:13px;color:var(--ink2);font-weight:600;margin-top:3px}
+.gcard .foot{display:flex;align-items:center;justify-content:space-between;margin-top:8px}
+.gcard .price{font-size:14px;font-weight:800;color:var(--g700);white-space:nowrap}
+.gcard .price small{font-weight:600;color:var(--ink2);font-size:12px}
+.svcs{display:flex;gap:4px}
+.svcs span{width:24px;height:24px;border-radius:7px;background:var(--g100);display:grid;place-items:center;color:var(--g800)}
+.svcs span svg{width:14px;height:14px}
+.badge{display:inline-flex;align-items:center;gap:4px;background:var(--gold);color:#2A1F05;font-size:11px;font-weight:800;padding:3px 8px;border-radius:999px;letter-spacing:.02em;white-space:nowrap}
+.badge svg{width:11px;height:11px;stroke:#2A1F05;fill:#2A1F05;stroke-width:1.5}
+.badge.soft{background:var(--g100);color:var(--g800)}
+.badge.soft svg{stroke:var(--g800);fill:none}
+.empty{padding:28px 18px;text-align:center;color:var(--ink2);font-weight:600}
+
+/* ---------- Golf detail ---------- */
+.hero{position:relative;height:230px;overflow:hidden;background:var(--g700)}
+.hero > svg{width:100%;height:100%}
+.hero .float{position:absolute;top:10px;left:14px;right:14px;display:flex;justify-content:space-between;z-index:3}
+.hero .grad{position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,.18) 0%,rgba(0,0,0,0) 35%,rgba(10,59,44,.55) 100%)}
+.hero .title{position:absolute;left:18px;right:18px;bottom:14px;color:#fff;z-index:2}
+.hero .title h2{font-size:24px;font-weight:800;letter-spacing:-.02em;line-height:1.15;text-shadow:0 2px 10px rgba(0,0,0,.35)}
+.hero .title .sub{font-size:14px;font-weight:600;opacity:.95;margin-top:3px;display:flex;align-items:center;gap:6px}
+.hero .title .badge{margin-bottom:8px}
+.facts{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;padding:14px 18px 0}
+.fact{background:var(--white);border-radius:14px;padding:10px 8px;text-align:center;box-shadow:0 4px 14px rgba(10,59,44,.06)}
+.fact b{display:block;font-size:19px;font-weight:800;color:var(--g800)}
+.fact span{font-size:12px;font-weight:700;color:var(--ink2)}
+.actions{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:14px 18px 0}
+.btn{height:50px;border-radius:15px;display:inline-flex;align-items:center;justify-content:center;gap:8px;font-weight:800;font-size:15px;transition:transform .15s,filter .15s;width:100%}
+.btn:active{transform:scale(.97)}
+.btn.primary{background:var(--g800);color:#fff}
+.btn.primary:hover{filter:brightness(1.1)}
+.btn.outline{background:var(--white);border:2px solid var(--g800);color:var(--g800)}
+.btn.gold{background:linear-gradient(135deg,#E2C169,#C9A24B);color:#2A1F05;box-shadow:0 8px 20px rgba(201,162,75,.35)}
+.btn.ghost{background:var(--g100);color:var(--g800)}
+.btn.sm{height:40px;font-size:14px;border-radius:12px;width:auto;padding:0 14px}
+.services{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+.svc{background:var(--white);border-radius:14px;padding:10px 4px;text-align:center;box-shadow:0 4px 14px rgba(10,59,44,.06)}
+.svc .i{width:38px;height:38px;border-radius:12px;background:var(--g100);display:grid;place-items:center;margin:0 auto 6px;color:var(--g800)}
+.svc span{font-size:11px;font-weight:700;color:var(--ink2);line-height:1.15;display:block}
+.svc.off span{color:#4F6359;text-decoration:line-through}
+.svc.off .i{background:#E9EEEB;color:#6B7E74}
+.info-card{background:var(--white);border-radius:var(--radius);padding:14px 16px;box-shadow:0 4px 14px rgba(10,59,44,.06)}
+.row{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:9px 0;border-bottom:1px solid #E7EEE9;font-size:14px}
+.row:last-child{border-bottom:0}
+.row .l{display:flex;align-items:center;gap:10px;font-weight:600;color:var(--ink2)}
+.row .l svg{width:18px;height:18px;color:var(--g700)}
+.row b{font-size:15px;color:var(--ink)}
+.news{display:grid;gap:10px}
+.news-item{display:flex;gap:12px;background:var(--white);border-radius:14px;padding:12px;box-shadow:0 4px 14px rgba(10,59,44,.06)}
+.news-item .date{flex:none;width:52px;height:52px;border-radius:12px;background:var(--g100);display:flex;flex-direction:column;align-items:center;justify-content:center;color:var(--g800);font-weight:800;line-height:1}
+.news-item .date b{font-size:18px}.news-item .date span{font-size:11px;text-transform:uppercase;letter-spacing:.04em}
+.news-item .t{font-size:14px;font-weight:800;line-height:1.25}
+.news-item .d{font-size:13px;color:var(--ink2);margin-top:3px;line-height:1.35}
+.desc{font-size:14px;color:var(--ink2);line-height:1.5;padding:0 18px;margin-top:14px}
+
+/* ---------- Competitions ---------- */
+.page-h{padding:6px 18px 0}
+.page-h h2{font-size:26px;font-weight:800;letter-spacing:-.02em;line-height:1.1}
+.page-h p{font-size:14px;color:var(--ink2);font-weight:600;margin-top:4px}
+.toggle-row{display:flex;align-items:center;justify-content:space-between;margin:10px 18px 0;background:var(--white);border:1.5px solid var(--line);border-radius:14px;padding:10px 14px;font-size:14px;font-weight:700}
+.switch{width:46px;height:28px;border-radius:999px;background:#B9C8BF;position:relative;transition:background .2s;flex:none}
+.switch::after{content:"";position:absolute;top:3px;left:3px;width:22px;height:22px;border-radius:50%;background:#fff;transition:transform .2s;box-shadow:0 2px 6px rgba(0,0,0,.2)}
+.switch.on{background:var(--g600)}.switch.on::after{transform:translateX(18px)}
+.month{font-size:13px;font-weight:800;color:var(--g700);text-transform:uppercase;letter-spacing:.08em;padding:18px 18px 8px}
+.comp-list{display:grid;gap:10px;padding:0 18px}
+.ccard{display:flex;gap:12px;background:var(--white);border-radius:var(--radius);padding:12px;box-shadow:0 4px 16px rgba(10,59,44,.07);text-align:left;width:100%;border:1.5px solid transparent;transition:transform .15s}
+.ccard:active{transform:scale(.985)}
+.ccard.partner{border-color:var(--gold-l);background:linear-gradient(180deg,#FFFDF6,#fff)}
+.ccard .date{flex:none;width:56px;border-radius:14px;background:var(--g800);color:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:8px 0;line-height:1}
+.ccard .date b{font-size:22px;font-weight:800}.ccard .date span{font-size:11px;font-weight:700;text-transform:uppercase;margin-top:3px;letter-spacing:.04em}
+.ccard .date small{font-size:10px;font-weight:600;opacity:.85;margin-top:3px;text-transform:capitalize}
+.ccard .body{flex:1;min-width:0}
+.ccard .t{font-size:15px;font-weight:800;line-height:1.2}
+.ccard .g{font-size:13px;font-weight:700;color:var(--g700);margin-top:2px;display:flex;align-items:center;gap:5px;flex-wrap:wrap}
+.tags{display:flex;gap:6px;flex-wrap:wrap;margin-top:7px}
+.tag{font-size:11px;font-weight:800;padding:3px 8px;border-radius:999px;background:var(--g100);color:var(--g800)}
+.tag.open{background:#E3F4EA;color:#145C3A}
+.tag.closed{background:#F3E9E9;color:#8A2328}
+.tag.gold{background:var(--gold-l);color:var(--gold-d)}
+.comp-hero{background:linear-gradient(135deg,var(--g900),var(--g700));color:#fff;padding:14px 18px 22px;border-radius:0 0 28px 28px}
+.comp-hero h2{font-size:24px;font-weight:800;letter-spacing:-.02em;line-height:1.15;margin-top:8px}
+.comp-hero .meta{font-size:14px;margin-top:6px;opacity:.95;font-weight:600}
+.kpis{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;padding:14px 18px 0}
+.kpi{background:var(--white);border-radius:14px;padding:10px 6px;text-align:center;box-shadow:0 4px 14px rgba(10,59,44,.06)}
+.kpi b{display:block;font-size:16px;font-weight:800;color:var(--g800)}
+.kpi span{font-size:11px;font-weight:700;color:var(--ink2)}
+.cta-bar{padding:18px 18px 22px}
+.note{font-size:12px;color:var(--ink2);font-weight:600;text-align:center;margin-top:8px}
+
+/* ---------- Tips ---------- */
+.member-banner{margin:14px 18px 0;background:linear-gradient(135deg,#1A4D3A,#0A3B2C);border-radius:var(--radius);padding:16px;color:#fff;display:flex;gap:12px;align-items:center;position:relative;overflow:hidden;text-align:left;width:calc(100% - 36px)}
+.member-banner::after{content:"";position:absolute;right:-30px;top:-30px;width:120px;height:120px;border-radius:50%;background:rgba(201,162,75,.25)}
+.member-banner .crown{width:44px;height:44px;border-radius:14px;background:var(--gold);display:grid;place-items:center;flex:none;color:#2A1F05}
+.member-banner b{font-size:16px;display:block}
+.member-banner span{font-size:13px;color:#E3EFE8}
+.member-banner .arrow{margin-left:auto;color:var(--gold);z-index:1}
+.tips{display:grid;gap:12px;padding:0 18px}
+.tcard{display:flex;gap:12px;background:var(--white);border-radius:var(--radius);padding:10px;box-shadow:0 4px 16px rgba(10,59,44,.07);text-align:left;width:100%;position:relative;transition:transform .15s}
+.tcard:active{transform:scale(.985)}
+.tcard .cover{width:96px;height:84px;border-radius:14px;flex:none;position:relative;overflow:hidden;display:grid;place-items:center;color:#fff}
+.tcard .cover svg{width:34px;height:34px;stroke:#fff}
+.tcard .cover.c1{background:linear-gradient(135deg,#1C8A5E,#0F4A37)}
+.tcard .cover.c2{background:linear-gradient(135deg,#2F9ED1,#155E8A)}
+.tcard .cover.c3{background:linear-gradient(135deg,#C9A24B,#8F6B1D)}
+.tcard .cover.c4{background:linear-gradient(135deg,#6B4FD1,#3A2A8C)}
+.tcard .cover.c5{background:linear-gradient(135deg,#E0763D,#9E3E12)}
+.tcard .body{flex:1;min-width:0;padding-right:30px}
+.tcard .cat{font-size:11px;font-weight:800;color:var(--g700);text-transform:uppercase;letter-spacing:.06em}
+.tcard .t{font-size:15px;font-weight:800;line-height:1.2;margin-top:2px}
+.tcard .pro{font-size:13px;color:var(--ink2);font-weight:600;margin-top:4px}
+.tcard .dur{font-size:12px;font-weight:700;color:var(--ink2);margin-top:6px;display:flex;align-items:center;gap:5px}
+.tcard .dur svg{width:14px;height:14px}
+.tcard.locked .cover{filter:saturate(.6)}
+.tcard.locked .cover::after{content:"";position:absolute;inset:0;background:rgba(10,31,24,.45)}
+.tcard .lock{position:absolute;right:12px;top:12px;width:30px;height:30px;border-radius:10px;background:var(--gold);display:grid;place-items:center;color:#2A1F05}
+.tcard .lock svg{width:16px;height:16px}
+.tcard .lock.free{background:var(--g100);color:var(--g800)}
+.tip-body{padding:0 18px;font-size:15px;line-height:1.55;color:var(--ink)}
+.tip-body h4{margin:16px 0 6px;font-size:16px}
+.tip-body ol{padding-left:20px;display:grid;gap:8px}
+.pro-card{display:flex;align-items:center;gap:12px;margin:16px 18px 0;background:var(--white);border-radius:14px;padding:12px;box-shadow:0 4px 14px rgba(10,59,44,.06)}
+.avatar{width:46px;height:46px;border-radius:50%;background:var(--g800);color:#fff;display:grid;place-items:center;font-weight:800;font-size:16px;flex:none}
+.avatar.gold{background:var(--gold);color:#2A1F05}
+.pro-card b{display:block;font-size:14px}.pro-card span{font-size:13px;color:var(--ink2);font-weight:600}
+
+/* ---------- Membership ---------- */
+.mem-hero{background:linear-gradient(160deg,#0A3B2C 0%,#166A4A 70%,#1C8A5E 100%);color:#fff;padding:10px 18px 36px;position:relative;overflow:hidden;border-radius:0 0 30px 30px}
+.mem-hero::before{content:"";position:absolute;right:-60px;top:-40px;width:220px;height:220px;border-radius:50%;background:rgba(201,162,75,.22)}
+.mem-hero .crown{width:62px;height:62px;border-radius:20px;background:var(--gold);display:grid;place-items:center;color:#2A1F05;margin:6px 0 14px;box-shadow:0 10px 24px rgba(0,0,0,.25)}
+.mem-hero h2{font-size:28px;font-weight:800;letter-spacing:-.02em;line-height:1.1}
+.mem-hero p{font-size:15px;margin-top:8px;color:#E3EFE8;line-height:1.45}
+.price-card{margin:-16px 18px 0;background:var(--white);border-radius:var(--radius);padding:16px;box-shadow:var(--shadow);border:2px solid var(--gold);position:relative}
+.price-card .pop{position:absolute;top:-12px;left:16px;background:var(--gold);color:#2A1F05;font-size:11px;font-weight:800;padding:4px 10px;border-radius:999px;letter-spacing:.04em}
+.price-card .p{display:flex;align-items:baseline;gap:6px;margin-top:6px}
+.price-card .p b{font-size:36px;font-weight:800;color:var(--g900);letter-spacing:-.02em}
+.price-card .p span{font-size:15px;font-weight:700;color:var(--ink2)}
+.price-card .alt{font-size:13px;color:var(--ink2);font-weight:600;margin-top:2px}
+.benefits{display:grid;gap:10px;padding:0 18px}
+.benefit{display:flex;gap:12px;align-items:flex-start;background:var(--white);border-radius:14px;padding:12px;box-shadow:0 4px 14px rgba(10,59,44,.06)}
+.benefit .ck{width:30px;height:30px;border-radius:10px;background:var(--g100);display:grid;place-items:center;color:var(--g800);flex:none}
+.benefit .ck svg{width:16px;height:16px;stroke-width:2.6}
+.benefit b{display:block;font-size:14px}.benefit span{font-size:13px;color:var(--ink2);font-weight:500;line-height:1.35}
+.quote{margin:18px 18px 0;background:var(--sand);border-radius:14px;padding:14px;font-size:14px;line-height:1.45;color:#3E2E09;font-weight:600}
+.quote small{display:block;margin-top:6px;font-weight:800}
+
+/* ---------- Golf offer ---------- */
+.offer-hero{background:linear-gradient(160deg,#0A3B2C,#14603F);color:#fff;padding:10px 18px 24px;border-radius:0 0 30px 30px;position:relative;overflow:hidden}
+.offer-hero::after{content:"";position:absolute;right:-70px;bottom:-150px;width:200px;height:200px;border-radius:50%;background:rgba(255,255,255,.07)}
+.offer-hero .eyebrow{font-size:12px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:var(--gold)}
+.offer-hero h2{font-size:28px;font-weight:800;letter-spacing:-.02em;line-height:1.1;margin-top:6px}
+.offer-hero p{font-size:15px;margin-top:8px;color:#E3EFE8;line-height:1.45}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:-14px 18px 0}
+.stat{background:var(--white);border-radius:14px;padding:10px 6px;text-align:center;box-shadow:var(--shadow)}
+.stat b{display:block;font-size:18px;font-weight:800;color:var(--g800)}
+.stat span{font-size:11px;font-weight:700;color:var(--ink2)}
+.plans{display:grid;gap:14px;padding:0 18px}
+.plan{background:var(--white);border-radius:var(--radius);padding:16px;box-shadow:0 4px 16px rgba(10,59,44,.07);border:2px solid var(--line);position:relative}
+.plan.pro{border-color:var(--gold);background:linear-gradient(180deg,#FFFDF6,#fff)}
+.plan .pop{position:absolute;top:-12px;right:14px;background:var(--gold);color:#2A1F05;font-size:11px;font-weight:800;padding:4px 10px;border-radius:999px}
+.plan h4{font-size:19px;font-weight:800;display:flex;align-items:center;gap:8px}
+.plan .pr{display:flex;align-items:baseline;gap:5px;margin-top:4px}
+.plan .pr b{font-size:30px;font-weight:800;color:var(--g900);letter-spacing:-.02em}
+.plan .pr span{font-size:13px;font-weight:700;color:var(--ink2)}
+.plan ul{list-style:none;margin-top:12px;display:grid;gap:8px}
+.plan li{display:flex;gap:10px;align-items:flex-start;font-size:14px;font-weight:600;color:var(--ink)}
+.plan li svg{width:18px;height:18px;flex:none;margin-top:1px;color:var(--g600);stroke-width:2.6}
+.plan li.no{color:#5A6D63}
+.plan li.no svg{color:#8A9B92}
+.plan .btn{margin-top:14px}
+
+/* ---------- Profile ---------- */
+.profile-h{display:flex;align-items:center;gap:14px;padding:10px 18px 0}
+.profile-h .avatar{width:64px;height:64px;font-size:22px}
+.profile-h h2{font-size:22px;font-weight:800;letter-spacing:-.02em}
+.profile-h p{font-size:14px;color:var(--ink2);font-weight:600;margin-top:2px}
+.menu{display:grid;gap:8px;padding:0 18px}
+.mitem{display:flex;align-items:center;gap:12px;background:var(--white);border-radius:14px;padding:12px 14px;box-shadow:0 4px 14px rgba(10,59,44,.06);text-align:left;width:100%;transition:transform .15s}
+.mitem:active{transform:scale(.985)}
+.mitem .mi{width:38px;height:38px;border-radius:12px;background:var(--g100);display:grid;place-items:center;color:var(--g800);flex:none}
+.mitem .mi.gold{background:var(--gold-l);color:var(--gold-d)}
+.mitem b{display:block;font-size:15px}.mitem span{font-size:13px;color:var(--ink2);font-weight:600}
+.mitem .chev{margin-left:auto;color:var(--ink2)}
+.mitem .body{flex:1;min-width:0}
+
+/* ---------- Tab bar & toast ---------- */
+.tabbar{flex:none;height:78px;background:var(--white);border-top:1px solid #DCE6E0;display:grid;grid-template-columns:repeat(4,1fr);padding:8px 10px 14px;position:relative;z-index:10}
+.tab{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;font-size:11px;font-weight:800;color:var(--ink2);border-radius:14px;transition:all .18s}
+.tab .ti{width:50px;height:30px;border-radius:999px;display:grid;place-items:center;transition:background .18s}
+.tab.on{color:var(--g900)}
+.tab.on .ti{background:var(--g200)}
+.tab:active{transform:scale(.95)}
+.toast{position:absolute;left:18px;right:18px;bottom:92px;background:var(--ink);color:#fff;border-radius:14px;padding:12px 14px;font-size:14px;font-weight:700;display:flex;gap:10px;align-items:center;z-index:50;opacity:0;transform:translateY(10px);transition:all .25s;pointer-events:none;box-shadow:0 10px 30px rgba(0,0,0,.3)}
+.toast.show{opacity:1;transform:none}
+.toast svg{stroke:var(--gold)}
+.bottom-space{height:24px}
+
+/* =========================================================
+   Responsive
+   ========================================================= */
+@media (max-width:980px){
+  .stage{flex-direction:column;gap:28px;padding:28px 16px 36px}
+  .pitch{max-width:560px;text-align:center}
+  .pitch .brand{justify-content:center}
+  .pitch h1{font-size:34px}
+  .pitch .promise{font-size:17px}
+  .pillars{text-align:left}
+  .pitch .hint{justify-content:center}
+}
+@media (max-width:430px){
+  .phone{width:calc(100vw - 24px);min-width:0;border-radius:40px;padding:8px;height:min(820px, calc(100vh - 40px))}
+  .frame{border-radius:34px}
+  .services{grid-template-columns:repeat(4,1fr)}
+}
+@media (prefers-reduced-motion:reduce){
+  .screen.in-fade,.screen.in-slide,.screen.in-back{animation:none}
+  .pin.partner .ring{animation:none}
+}
+</style>
+</head>
+<body>
+
+<!-- Shared SVG symbols / gradients -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <linearGradient id="sky-a" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#8FD3F0"/><stop offset="1" stop-color="#E7F4F8"/></linearGradient>
+    <linearGradient id="sky-b" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#F6C68A"/><stop offset="1" stop-color="#FBE7C7"/></linearGradient>
+    <linearGradient id="sky-c" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#9EC9EC"/><stop offset="1" stop-color="#DCEBF5"/></linearGradient>
+    <linearGradient id="green-a" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#3DAF74"/><stop offset="1" stop-color="#1C7A52"/></linearGradient>
+    <linearGradient id="green-b" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#55BE86"/><stop offset="1" stop-color="#25A36F"/></linearGradient>
+    <linearGradient id="dune" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#F3E3B6"/><stop offset="1" stop-color="#DFC78C"/></linearGradient>
+    <linearGradient id="sea" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#6FB3CC"/><stop offset="1" stop-color="#4F95B2"/></linearGradient>
+    <linearGradient id="mount" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#6C8F7A"/><stop offset="1" stop-color="#3F6A54"/></linearGradient>
+    <pattern id="forest" width="18" height="18" patternUnits="userSpaceOnUse"><circle cx="9" cy="9" r="2.2" fill="#B9D9BE"/></pattern>
+  </defs>
+</svg>
+
+<main class="stage">
+  <!-- ===================== Pitch panel ===================== -->
+  <aside class="pitch">
+    <span class="kicker">Concept · Région test : Landes &amp; Côte basque</span>
+    <div class="brand">
+      <div class="logo"><svg viewBox="0 0 24 24"><path d="M6 21V4"/><path d="M6 4h10l-2 4 2 4H6"/><circle cx="16" cy="19" r="2"/></svg></div>
+      <h1>Golf App</h1>
+    </div>
+    <p class="promise">Tous les golfs de France dans votre poche : trouvez un parcours, suivez les compétitions près de chez vous et progressez avec les conseils des pros.</p>
+    <div class="pillars">
+      <div class="pillar">
+        <div class="pi"><svg class="ic" viewBox="0 0 24 24"><path d="M12 22s7-6.2 7-12a7 7 0 0 0-14 0c0 5.8 7 12 7 12z"/><circle cx="12" cy="10" r="2.5"/></svg></div>
+        <div><b>La carte de tous les golfs</b><span>Parcours, practices, services et tarifs, filtrables en un geste.</span></div>
+      </div>
+      <div class="pillar">
+        <div class="pi"><svg class="ic" viewBox="0 0 24 24"><path d="M8 21h8M12 17v4M6 4h12v4a6 6 0 0 1-12 0z"/><path d="M6 6H3v2a3 3 0 0 0 3 3M18 6h3v2a3 3 0 0 1-3 3"/></svg></div>
+        <div><b>Actualités et compétitions</b><span>L’agenda des clubs de la région, avec inscription en deux clics.</span></div>
+      </div>
+      <div class="pillar">
+        <div class="pi"><svg class="ic" viewBox="0 0 24 24"><path d="M9 18h6M10 21h4M12 3a6 6 0 0 0-4 10.5c.7.6 1 1.3 1 2V16h6v-.5c0-.7.3-1.4 1-2A6 6 0 0 0 12 3z"/></svg></div>
+        <div><b>Contenus exclusifs membres</b><span>Astuces, conseils de pros et programmes d’entraînement.</span></div>
+      </div>
+    </div>
+    <p class="hint"><svg class="ic" viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg> Cliquez dans le téléphone pour naviguer entre les écrans.</p>
+  </aside>
+
+  <!-- ===================== Phone ===================== -->
+  <div class="phone-wrap">
+    <div class="phone">
+      <div class="frame">
+        <div class="notch"></div>
+        <div class="statusbar">
+          <span id="clock">9:41</span>
+          <span class="right">
+            <svg viewBox="0 0 18 14" aria-hidden="true"><rect x="0" y="9" width="3" height="5" rx="1" fill="#0E1F18"/><rect x="5" y="6" width="3" height="8" rx="1" fill="#0E1F18"/><rect x="10" y="3" width="3" height="11" rx="1" fill="#0E1F18"/><rect x="15" y="0" width="3" height="14" rx="1" fill="#0E1F18"/></svg>
+            <svg viewBox="0 0 18 14" aria-hidden="true"><path d="M1 5a11 11 0 0 1 16 0M4 8a7 7 0 0 1 10 0M7 11a3 3 0 0 1 4 0" stroke="#0E1F18" stroke-width="1.8" fill="none" stroke-linecap="round"/></svg>
+            <svg viewBox="0 0 26 14" aria-hidden="true"><rect x="0.5" y="0.5" width="22" height="13" rx="3.5" stroke="#0E1F18" fill="none"/><rect x="2.5" y="2.5" width="16" height="9" rx="2" fill="#0E1F18"/><rect x="24" y="4.5" width="2" height="5" rx="1" fill="#0E1F18"/></svg>
+          </span>
+        </div>
+
+        <div class="screens" id="screens">
+
+          <!-- ===== Carte ===== -->
+          <section class="screen" id="screen-map" data-tab="map">
+            <div class="hello">
+              <div class="greet">Bonjour Léa 👋 · Hossegor</div>
+              <h2>Trouver un golf</h2>
+            </div>
+            <div class="search">
+              <svg class="ic" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>
+              <input id="search" type="search" placeholder="Rechercher un golf, une ville…" aria-label="Rechercher un golf">
+            </div>
+            <div class="chips" id="filters"></div>
+            <div class="map-card">
+              <svg class="map" id="map" viewBox="0 0 390 320" role="img" aria-label="Carte stylisée des Landes et de la Côte basque"></svg>
+              <div class="map-legend"><span><i class="p"></i>Partenaire</span><span><i class="s"></i>Golf</span></div>
+            </div>
+            <div class="sec-h pad" style="margin-top:20px"><h3 id="list-title">Golfs près de vous</h3><button class="link" data-toast="Tri : distance · note · prix (démo)">Trier : distance</button></div>
+            <div class="golf-list" id="golf-list"></div>
+          </section>
+
+          <!-- ===== Fiche golf ===== -->
+          <section class="screen" id="screen-golf" data-tab="map" data-sub="1">
+            <div id="golf-detail"></div>
+          </section>
+
+          <!-- ===== Compétitions ===== -->
+          <section class="screen" id="screen-comps" data-tab="comps">
+            <div class="page-h"><h2>Compétitions</h2><p>À venir dans les Landes et au Pays basque</p></div>
+            <div class="chips" id="comp-date-filters"></div>
+            <div class="chips" id="comp-format-filters" style="padding-top:2px"></div>
+            <div class="toggle-row"><span>Ouvertes aux non-membres</span><button class="switch" id="open-only" role="switch" aria-checked="false" aria-label="Afficher uniquement les compétitions ouvertes aux non-membres"></button></div>
+            <div id="comp-list"></div>
+            <div class="bottom-space"></div>
+          </section>
+
+          <!-- ===== Détail compétition ===== -->
+          <section class="screen" id="screen-comp" data-tab="comps" data-sub="1">
+            <div id="comp-detail"></div>
+          </section>
+
+          <!-- ===== Astuces ===== -->
+          <section class="screen" id="screen-tips" data-tab="tips">
+            <div class="page-h"><h2>Astuces &amp; conseils</h2><p>Par les pros des golfs de la région</p></div>
+            <button class="member-banner" data-go="member">
+              <div class="crown"><svg class="ic" viewBox="0 0 24 24"><path d="M3 8l4.5 4L12 5l4.5 7L21 8l-2 11H5z"/></svg></div>
+              <div><b>Devenir Membre</b><span>Tous les contenus exclusifs dès 6,90 €/mois</span></div>
+              <svg class="ic arrow" viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg>
+            </button>
+            <div class="sec-h pad" style="margin-top:20px"><h3>Gratuit cette semaine</h3></div>
+            <div class="tips" id="tips-free"></div>
+            <div class="sec-h pad" style="margin-top:22px"><h3>Exclusif membres</h3><span class="badge"><svg viewBox="0 0 24 24"><path d="M12 2l3 7 7 .6-5.3 4.6L18.5 21 12 17l-6.5 4 1.8-6.8L2 9.6 9 9z"/></svg>Membre</span></div>
+            <div class="tips" id="tips-locked"></div>
+            <div class="bottom-space"></div>
+          </section>
+
+          <!-- ===== Détail astuce ===== -->
+          <section class="screen" id="screen-tip" data-tab="tips" data-sub="1">
+            <div id="tip-detail"></div>
+          </section>
+
+          <!-- ===== Devenir Membre ===== -->
+          <section class="screen" id="screen-member" data-tab="tips" data-sub="1">
+            <div class="mem-hero">
+              <div class="topbar" style="background:transparent;padding:0;position:static"><button class="iconbtn ghost" data-back aria-label="Retour"><svg class="ic" viewBox="0 0 24 24"><path d="M15 6l-6 6 6 6"/></svg></button></div>
+              <div class="crown"><svg class="ic" viewBox="0 0 24 24" style="width:30px;height:30px"><path d="M3 8l4.5 4L12 5l4.5 7L21 8l-2 11H5z"/></svg></div>
+              <h2>Devenir Membre</h2>
+              <p>Progressez toute l’année avec les conseils des meilleurs pros de la région, où que vous jouiez.</p>
+            </div>
+            <div class="price-card">
+              <span class="pop">7 JOURS OFFERTS</span>
+              <div class="p"><b>6,90 €</b><span>/ mois</span></div>
+              <div class="alt">ou 59 € / an (2 mois offerts) · sans engagement</div>
+              <button class="btn gold" style="margin-top:12px" data-toast="Essai gratuit activé ! Bienvenue parmi les Membres 🏌️">Commencer l’essai gratuit</button>
+            </div>
+            <div class="sec-h pad" style="margin-top:22px"><h3>Ce que vous obtenez</h3></div>
+            <div class="benefits">
+              <div class="benefit"><div class="ck"><svg class="ic" viewBox="0 0 24 24"><path d="M5 12l5 5L20 7"/></svg></div><div><b>Toutes les astuces et vidéos des pros</b><span>Plus de 120 contenus technique, petit jeu, putting et mental.</span></div></div>
+              <div class="benefit"><div class="ck"><svg class="ic" viewBox="0 0 24 24"><path d="M5 12l5 5L20 7"/></svg></div><div><b>Programmes d’entraînement</b><span>Plans de 4 à 8 semaines adaptés à votre index, avec suivi.</span></div></div>
+              <div class="benefit"><div class="ck"><svg class="ic" viewBox="0 0 24 24"><path d="M5 12l5 5L20 7"/></svg></div><div><b>Conseils parcours par parcours</b><span>Les clés de chaque trou des golfs partenaires, par leurs pros.</span></div></div>
+              <div class="benefit"><div class="ck"><svg class="ic" viewBox="0 0 24 24"><path d="M5 12l5 5L20 7"/></svg></div><div><b>Avantages chez les partenaires</b><span>Seaux de balles offerts, green fees à tarif Membre, accès anticipé aux compétitions.</span></div></div>
+              <div class="benefit"><div class="ck"><svg class="ic" viewBox="0 0 24 24"><path d="M5 12l5 5L20 7"/></svg></div><div><b>Sans publicité, sans engagement</b><span>Résiliable à tout moment en un clic.</span></div></div>
+            </div>
+            <div class="quote">« En 6 semaines, j’ai gagné 3 points d’index grâce au programme putting de Maialen. »<small>— Antoine, 42 ans, Golf du Lac Marin</small></div>
+            <div class="bottom-space"></div>
+          </section>
+
+          <!-- ===== Profil ===== -->
+          <section class="screen" id="screen-profile" data-tab="profile">
+            <div class="page-h"><h2>Profil</h2></div>
+            <div class="profile-h">
+              <div class="avatar">LD</div>
+              <div><h2>Léa Darrigade</h2><p>Index 18,4 · Golf du Lac Marin</p></div>
+            </div>
+            <div class="stats" style="margin:16px 18px 0">
+              <div class="stat" style="box-shadow:0 4px 14px rgba(10,59,44,.06)"><b>12</b><span>parties 2026</span></div>
+              <div class="stat" style="box-shadow:0 4px 14px rgba(10,59,44,.06)"><b>3</b><span>inscriptions</span></div>
+              <div class="stat" style="box-shadow:0 4px 14px rgba(10,59,44,.06)"><b>5</b><span>favoris</span></div>
+            </div>
+            <button class="member-banner" data-go="member" style="margin-top:16px">
+              <div class="crown"><svg class="ic" viewBox="0 0 24 24"><path d="M3 8l4.5 4L12 5l4.5 7L21 8l-2 11H5z"/></svg></div>
+              <div><b>Statut : Visiteur</b><span>Passez Membre pour débloquer les contenus</span></div>
+              <svg class="ic arrow" viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg>
+            </button>
+            <div class="sec-h pad" style="margin-top:22px"><h3>Mon activité</h3></div>
+            <div class="menu">
+              <button class="mitem" data-tab-go="map"><div class="mi"><svg class="ic" viewBox="0 0 24 24"><path d="M12 21s-7-5.5-7-11a7 7 0 0 1 14 0c0 5.5-7 11-7 11z"/><circle cx="12" cy="10" r="2.5"/></svg></div><div class="body"><b>Mes golfs favoris</b><span>5 golfs enregistrés</span></div><svg class="ic chev" viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg></button>
+              <button class="mitem" data-tab-go="comps"><div class="mi"><svg class="ic" viewBox="0 0 24 24"><path d="M8 21h8M12 17v4M6 4h12v4a6 6 0 0 1-12 0z"/></svg></div><div class="body"><b>Mes inscriptions</b><span>Coupe de la Dune · 24 oct.</span></div><svg class="ic chev" viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg></button>
+            </div>
+            <div class="sec-h pad" style="margin-top:22px"><h3>Vous gérez un golf ?</h3></div>
+            <div class="menu">
+              <button class="mitem" data-go="offer"><div class="mi gold"><svg class="ic" viewBox="0 0 24 24"><path d="M12 2l3 7 7 .6-5.3 4.6L18.5 21 12 17l-6.5 4 1.8-6.8L2 9.6 9 9z"/></svg></div><div class="body"><b>Espace golfs</b><span>Faites rayonner votre golf sur Golf App</span></div><svg class="ic chev" viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg></button>
+            </div>
+            <div class="sec-h pad" style="margin-top:22px"><h3>Réglages</h3></div>
+            <div class="menu">
+              <button class="mitem" data-toast="Notifications : compétitions et actualités de vos favoris"><div class="mi"><svg class="ic" viewBox="0 0 24 24"><path d="M6 16V11a6 6 0 0 1 12 0v5l2 2H4z"/><path d="M10 21h4"/></svg></div><div class="body"><b>Notifications</b><span>Activées</span></div><svg class="ic chev" viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg></button>
+              <button class="mitem" data-toast="Golf App · version de démonstration"><div class="mi"><svg class="ic" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/></svg></div><div class="body"><b>À propos</b><span>Golf App · démonstration</span></div><svg class="ic chev" viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg></button>
+            </div>
+            <div class="bottom-space"></div>
+          </section>
+
+          <!-- ===== Espace golfs ===== -->
+          <section class="screen" id="screen-offer" data-tab="profile" data-sub="1">
+            <div class="offer-hero">
+              <div class="topbar" style="background:transparent;padding:0 0 10px;position:static"><button class="iconbtn ghost" data-back aria-label="Retour"><svg class="ic" viewBox="0 0 24 24"><path d="M15 6l-6 6 6 6"/></svg></button></div>
+              <div class="eyebrow">Espace golfs</div>
+              <h2>Faites rayonner votre golf</h2>
+              <p>Soyez visible auprès des golfeurs de passage et de la région, et remplissez vos compétitions.</p>
+            </div>
+            <div class="stats">
+              <div class="stat"><b>38</b><span>golfs référencés</span></div>
+              <div class="stat"><b>3 200</b><span>golfeurs actifs</span></div>
+              <div class="stat"><b>×4</b><span>vues avec Partenaire</span></div>
+            </div>
+            <div class="sec-h pad" style="margin-top:22px"><h3>Deux formules</h3></div>
+            <div class="plans">
+              <div class="plan">
+                <h4>Gratuite</h4>
+                <div class="pr"><b>0 €</b><span>pour toujours</span></div>
+                <ul>
+                  <li><svg class="ic" viewBox="0 0 24 24"><path d="M5 12l5 5L20 7"/></svg>Fiche du golf sur la carte (parcours, services, horaires, tarifs)</li>
+                  <li><svg class="ic" viewBox="0 0 24 24"><path d="M5 12l5 5L20 7"/></svg>Compétitions listées dans l’agenda régional</li>
+                  <li><svg class="ic" viewBox="0 0 24 24"><path d="M5 12l5 5L20 7"/></svg>1 actualité publiée par mois</li>
+                  <li class="no"><svg class="ic" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg>Pas de mise en avant ni de badge</li>
+                  <li class="no"><svg class="ic" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg>Pas de statistiques de visibilité</li>
+                </ul>
+                <button class="btn outline" data-toast="Demande de référencement envoyée (démo)">Référencer mon golf</button>
+              </div>
+              <div class="plan pro">
+                <span class="pop">RECOMMANDÉ</span>
+                <h4>Partenaire <span class="badge"><svg viewBox="0 0 24 24"><path d="M12 2l3 7 7 .6-5.3 4.6L18.5 21 12 17l-6.5 4 1.8-6.8L2 9.6 9 9z"/></svg>Partenaire</span></h4>
+                <div class="pr"><b>89 €</b><span>HT / mois · sans engagement</span></div>
+                <ul>
+                  <li><svg class="ic" viewBox="0 0 24 24"><path d="M5 12l5 5L20 7"/></svg>Tout de la formule Gratuite</li>
+                  <li><svg class="ic" viewBox="0 0 24 24"><path d="M5 12l5 5L20 7"/></svg>Pin doré sur la carte et badge « Partenaire »</li>
+                  <li><svg class="ic" viewBox="0 0 24 24"><path d="M5 12l5 5L20 7"/></svg>En tête des résultats et des listes</li>
+                  <li><svg class="ic" viewBox="0 0 24 24"><path d="M5 12l5 5L20 7"/></svg>Actualités et photos illimitées, compétitions mises en avant</li>
+                  <li><svg class="ic" viewBox="0 0 24 24"><path d="M5 12l5 5L20 7"/></svg>Notifications push aux golfeurs à proximité</li>
+                  <li><svg class="ic" viewBox="0 0 24 24"><path d="M5 12l5 5L20 7"/></svg>Tableau de bord : vues, itinéraires, appels, inscriptions</li>
+                  <li><svg class="ic" viewBox="0 0 24 24"><path d="M5 12l5 5L20 7"/></svg>Vos pros publient dans l’espace Membres</li>
+                </ul>
+                <button class="btn gold" data-toast="Merci ! Un conseiller vous rappelle sous 24 h (démo)">Demander une démo</button>
+              </div>
+            </div>
+            <p class="note" style="padding:0 18px">Déjà partenaires : Golf de la Dune d’Argent, Golf des Pins de Moliets, Golf de la Corniche Basque.</p>
+            <div class="bottom-space"></div>
+          </section>
+
+        </div>
+
+        <nav class="tabbar" aria-label="Navigation principale">
+          <button class="tab" data-tab="map"><span class="ti"><svg class="ic" viewBox="0 0 24 24"><path d="M3 6l6-2 6 2 6-2v14l-6 2-6-2-6 2z"/><path d="M9 4v14M15 6v14"/></svg></span>Carte</button>
+          <button class="tab" data-tab="comps"><span class="ti"><svg class="ic" viewBox="0 0 24 24"><path d="M8 21h8M12 17v4M6 4h12v4a6 6 0 0 1-12 0z"/><path d="M6 6H3v2a3 3 0 0 0 3 3M18 6h3v2a3 3 0 0 1-3 3"/></svg></span>Compétitions</button>
+          <button class="tab" data-tab="tips"><span class="ti"><svg class="ic" viewBox="0 0 24 24"><path d="M9 18h6M10 21h4M12 3a6 6 0 0 0-4 10.5c.7.6 1 1.3 1 2V16h6v-.5c0-.7.3-1.4 1-2A6 6 0 0 0 12 3z"/></svg></span>Astuces</button>
+          <button class="tab" data-tab="profile"><span class="ti"><svg class="ic" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg></span>Profil</button>
+        </nav>
+
+        <div class="toast" id="toast" role="status" aria-live="polite"></div>
+      </div>
+    </div>
+    <p class="demo-note">Données de démonstration</p>
+  </div>
+</main>
+
+<script>
+/* =========================================================
+   Icônes (inline SVG)
+   ========================================================= */
+const I = {
+  flag:'<path d="M6 21V4"/><path d="M6 4h10l-2 4 2 4H6"/>',
+  practice:'<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1.2" fill="currentColor"/>',
+  restaurant:'<path d="M5 3v7a3 3 0 0 0 6 0V3M8 10v11"/><path d="M15 3c0 0 3 2 3 7s-3 4-3 4v7"/>',
+  rental:'<path d="M3 15h13l3-5h2"/><rect x="3" y="9" width="9" height="6" rx="1"/><circle cx="7" cy="19" r="2"/><circle cx="16" cy="19" r="2"/>',
+  beginner:'<path d="M12 21v-8"/><path d="M12 13c0-4 3-6 7-6 0 4-3 6-7 6z"/><path d="M12 13c0-4-3-6-7-6 0 4 3 6 7 6z"/>',
+  proshop:'<path d="M20 12l-8 8-9-9V4h7z"/><circle cx="7.5" cy="7.5" r="1.5"/>',
+  hotel:'<path d="M3 19V8M3 15h18v4M7 12h5v3M21 15v-2a3 3 0 0 0-3-3h-6"/>',
+  lessons:'<path d="M2 9l10-4 10 4-10 4z"/><path d="M6 11v4c0 1 3 3 6 3s6-2 6-3v-4"/>',
+  phone:'<path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2z"/>',
+  route:'<path d="M12 21s-7-5.5-7-11a7 7 0 0 1 14 0c0 5.5-7 11-7 11z"/><circle cx="12" cy="10" r="2.5"/>',
+  clock:'<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',
+  euro:'<path d="M18 6a7 7 0 0 0-11 2.5M18 18a7 7 0 0 1-11-2.5M4 10h10M4 14h10"/>',
+  cal:'<rect x="3" y="5" width="18" height="16" rx="3"/><path d="M3 10h18M8 3v4M16 3v4"/>',
+  lock:'<rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/>',
+  play:'<path d="M8 5l11 7-11 7z" fill="currentColor"/>',
+  back:'<path d="M15 6l-6 6 6 6"/>',
+  chev:'<path d="M9 6l6 6-6 6"/>',
+  star:'<path d="M12 2l3 7 7 .6-5.3 4.6L18.5 21 12 17l-6.5 4 1.8-6.8L2 9.6 9 9z"/>',
+  check:'<path d="M5 12l5 5L20 7"/>',
+  heart:'<path d="M12 21s-8-5.3-8-11a4.5 4.5 0 0 1 8-2.8A4.5 4.5 0 0 1 20 10c0 5.7-8 11-8 11z"/>',
+  share:'<path d="M12 3v12M7 8l5-5 5 5M5 14v5a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-5"/>',
+  trophy:'<path d="M8 21h8M12 17v4M6 4h12v4a6 6 0 0 1-12 0z"/><path d="M6 6H3v2a3 3 0 0 0 3 3M18 6h3v2a3 3 0 0 1-3 3"/>',
+  users:'<circle cx="9" cy="8" r="3.5"/><path d="M2 20a7 7 0 0 1 14 0"/><circle cx="17" cy="9" r="2.5"/><path d="M16 14a5 5 0 0 1 6 5"/>',
+  bulb:'<path d="M9 18h6M10 21h4M12 3a6 6 0 0 0-4 10.5c.7.6 1 1.3 1 2V16h6v-.5c0-.7.3-1.4 1-2A6 6 0 0 0 12 3z"/>',
+  dumbbell:'<path d="M6 8v8M18 8v8M3 10v4M21 10v4M6 12h12"/>',
+  brain:'<path d="M12 4a3 3 0 0 0-3 3v10a3 3 0 0 0 6 0V7a3 3 0 0 0-3-3z"/><path d="M9 9H7a3 3 0 0 0 0 6h2M15 9h2a3 3 0 0 1 0 6h-2"/>',
+  wind:'<path d="M3 8h11a3 3 0 1 0-3-3M3 12h15a3 3 0 1 1-3 3M3 16h8a2 2 0 1 1-2 2"/>',
+  green:'<path d="M12 21V8"/><path d="M12 8l6 2-6 2"/><ellipse cx="12" cy="20" rx="7" ry="2"/>',
+};
+const ic = (n, cls='') => `<svg class="ic ${cls}" viewBox="0 0 24 24" aria-hidden="true">${I[n]}</svg>`;
+
+/* =========================================================
+   Illustrations SVG (en-têtes de fiches et vignettes)
+   ========================================================= */
+function scene(kind){
+  const flag = (x,y,s=1)=>`<g transform="translate(${x} ${y}) scale(${s})"><ellipse cx="0" cy="0" rx="4" ry="1.6" fill="#0F4A37" opacity=".6"/><line x1="0" y1="0" x2="0" y2="-40" stroke="#fff" stroke-width="2"/><path d="M0 -40 l16 5 -16 5z" fill="#D9342B"/></g>`;
+  const pines = (y, c='#1E5B41')=>{
+    let s='';for(let x=-10;x<400;x+=26){const h=16+((x*7)%9);s+=`<path d="M${x} ${y} l${7} ${-h} l${7} ${h}z M${x+2} ${y-6} l${5} ${-h+4} l${5} ${h-4}z" fill="${c}"/><rect x="${x+6}" y="${y}" width="2" height="6" fill="#4A3B2A"/>`;}return s;
+  };
+  let body='';
+  if(kind==='dune'){
+    body = `<rect width="390" height="200" fill="url(#sky-a)"/><circle cx="310" cy="50" r="24" fill="#FFF0B8" opacity=".95"/>
+      <path d="M0 108 Q195 98 390 110 L390 128 L0 128Z" fill="url(#sea)"/>
+      <path d="M0 118 q30 -5 60 0 t60 0 t60 0 t60 0 t60 0 t60 0 t30 0 v6 h-390z" fill="#fff" opacity=".35"/>
+      <path d="M0 138 C 70 120 150 148 240 128 S 350 138 390 126 L390 200 L0 200Z" fill="url(#dune)"/>
+      <path d="M0 162 C 110 142 210 180 390 154 L390 200 L0 200Z" fill="url(#green-a)"/>
+      <ellipse cx="250" cy="172" rx="46" ry="9" fill="#55BE86"/>
+      <path d="M70 184 q18 -8 36 0 q-18 6 -36 0z" fill="#EAD9A6"/>${flag(250,172)}`;
+  } else if(kind==='pines'){
+    body = `<rect width="390" height="200" fill="url(#sky-b)"/><circle cx="90" cy="60" r="22" fill="#FFE39A"/>
+      <path d="M0 150 C 100 130 200 165 390 140 L390 200 L0 200Z" fill="url(#green-a)"/>
+      ${pines(132,'#16483A')}
+      <ellipse cx="120" cy="178" rx="60" ry="12" fill="#7FB7C8"/><ellipse cx="120" cy="176" rx="40" ry="6" fill="#A9D3E0" opacity=".8"/>
+      <ellipse cx="290" cy="178" rx="40" ry="8" fill="#55BE86"/>${flag(290,178)}`;
+  } else if(kind==='basque'){
+    body = `<rect width="390" height="200" fill="url(#sky-c)"/>
+      <path d="M0 120 L60 80 L120 110 L180 60 L240 100 L300 70 L390 115 L390 200 L0 200Z" fill="url(#mount)"/>
+      <path d="M160 70 L180 60 L200 72z" fill="#fff" opacity=".8"/>
+      <path d="M0 150 C 100 135 200 165 390 145 L390 200 L0 200Z" fill="url(#green-b)"/>
+      <path d="M0 175 C 80 165 160 190 390 170 L390 200 L0 200Z" fill="url(#green-a)"/>
+      <rect x="40" y="128" width="34" height="22" fill="#F6EFE4"/><path d="M36 128 L57 112 L78 128z" fill="#B23A2E"/><rect x="48" y="134" width="6" height="8" fill="#B23A2E"/>
+      <ellipse cx="270" cy="182" rx="44" ry="8" fill="#55BE86"/>${flag(270,182)}`;
+  } else if(kind==='lake'){
+    body = `<rect width="390" height="200" fill="url(#sky-a)"/><circle cx="60" cy="48" r="20" fill="#FFF0B8"/>
+      ${pines(118,'#1E5B41')}
+      <path d="M0 135 C 100 120 250 145 390 128 L390 200 L0 200Z" fill="url(#green-a)"/>
+      <path d="M0 158 C 80 150 160 172 390 160 L390 200 L0 200Z" fill="url(#sea)"/>
+      <path d="M0 158 C 80 150 160 172 390 160 L390 166 L0 166Z" fill="#fff" opacity=".2"/>
+      <path d="M200 178 h60 q10 -4 10 -10 h-80 q0 6 10 10z" fill="#2E9B63"/>${flag(240,170)}`;
+  } else if(kind==='practice'){
+    body = `<rect width="390" height="200" fill="url(#sky-b)"/>
+      <path d="M0 110 C 100 95 250 125 390 105 L390 200 L0 200Z" fill="url(#green-b)"/>
+      ${[70,110,150].map((y,i)=>`<rect x="${150+i*60}" y="${y+40}" width="28" height="16" rx="3" fill="#fff" stroke="#0F4A37" stroke-width="1.5"/><text x="${164+i*60}" y="${y+52}" font-size="10" font-weight="800" text-anchor="middle" fill="#0F4A37">${[100,150,200][i]}</text>`).join('')}
+      <rect x="0" y="168" width="390" height="32" fill="#1C7A52"/><rect x="20" y="172" width="60" height="22" rx="4" fill="#3B5D4A"/><rect x="100" y="172" width="60" height="22" rx="4" fill="#3B5D4A"/>
+      <circle cx="90" cy="168" r="4" fill="#fff"/><circle cx="130" cy="150" r="3" fill="#fff"/><circle cx="175" cy="135" r="2.5" fill="#fff"/>`;
+  } else { // river
+    body = `<rect width="390" height="200" fill="url(#sky-c)"/>
+      <path d="M0 125 C 100 112 250 138 390 118 L390 200 L0 200Z" fill="url(#green-a)"/>
+      <path d="M0 150 C 60 140 120 170 200 160 S 330 140 390 160 L390 180 C 330 160 260 185 200 178 S 60 160 0 170Z" fill="url(#sea)"/>
+      ${pines(118,'#16483A')}
+      <ellipse cx="110" cy="188" rx="40" ry="7" fill="#55BE86"/>${flag(110,188)}`;
+  }
+  return `<svg viewBox="0 0 390 200" preserveAspectRatio="xMidYMid slice" aria-hidden="true">${body}</svg>`;
+}
+
+/* =========================================================
+   Données de démonstration
+   ========================================================= */
+const SERVICES = {
+  practice:{l:'Practice',i:'practice'}, restaurant:{l:'Restaurant',i:'restaurant'}, rental:{l:'Location matériel',i:'rental'},
+  beginner:{l:'Débutants bienvenus',i:'beginner'}, proshop:{l:'Pro-shop',i:'proshop'}, hotel:{l:'Hôtel',i:'hotel'}, lessons:{l:'École de golf',i:'lessons'},
+};
+const FILTERS = [
+  {k:'9',l:'9 trous',i:'flag'},{k:'18',l:'18 trous',i:'flag'},{k:'practice',l:'Practice',i:'practice'},
+  {k:'restaurant',l:'Restaurant',i:'restaurant'},{k:'rental',l:'Location de matériel',i:'rental'},{k:'beginner',l:'Accessible débutants',i:'beginner'},
+];
+const GOLFS = [
+  {id:'dune',name:'Golf de la Dune d’Argent',town:'Seignosse',partner:true,holes:[18],par:72,len:'6 120 m',dist:'4 km',x:114,y:180,scene:'dune',
+   services:['practice','restaurant','rental','proshop','lessons'],hours:'8h00 – 19h30',gf:[['Green fee 18 trous semaine','62 €'],['Green fee 18 trous week-end','78 €'],['Green fee 9 trous','38 €'],['Seau de 50 balles','6 €']],
+   phone:'05 58 41 20 20',rating:'4,8',desc:'Links en bord d’océan, dessiné dans les dunes de Seignosse. Fairways ondulés, greens rapides et vue sur l’Atlantique depuis le trou 14. Restaurant panoramique ouvert à tous.',
+   news:[{d:'18',m:'oct.',t:'Nouveaux greens au trou 7 et 12',s:'Réouverture après rénovation : surfaces plus rapides et plus régulières.'},{d:'12',m:'oct.',t:'Soirée d’automne au club-house',s:'Vendredi 31 octobre, menu landais et remise des prix du Trophée des Dunes.'}],comps:['c1','c7']},
+  {id:'moliets',name:'Golf des Pins de Moliets',town:'Moliets-et-Maâ',partner:true,holes:[9,18],par:72,len:'6 050 m',dist:'21 km',x:120,y:108,scene:'pines',
+   services:['practice','restaurant','rental','proshop','hotel','lessons','beginner'],hours:'7h30 – 20h00',gf:[['Green fee 18 trous semaine','70 €'],['Green fee 18 trous week-end','85 €'],['Green fee 9 trous','42 €'],['Pass pratique illimité','29 €/mois']],
+   phone:'05 58 48 10 10',rating:'4,7',desc:'27 trous entre forêt de pins et océan. Le parcours 18 trous traverse la pinède avant de longer la plage sur les 4 derniers trous. Hôtel sur site et école de golf labellisée.',
+   news:[{d:'15',m:'oct.',t:'Stage débutants vacances de la Toussaint',s:'5 demi-journées avec Thomas Lahitte, matériel fourni. 12 places.'},{d:'3',m:'oct.',t:'Le 9 trous passe en tarif hiver',s:'Green fee 9 trous à 32 € du lundi au vendredi jusqu’en mars.'}],comps:['c2']},
+  {id:'corniche',name:'Golf de la Corniche Basque',town:'Urrugne',partner:true,holes:[18],par:71,len:'5 890 m',dist:'44 km',x:168,y:298,scene:'basque',
+   services:['practice','restaurant','proshop','lessons'],hours:'8h00 – 19h00',gf:[['Green fee 18 trous semaine','75 €'],['Green fee 18 trous week-end','95 €'],['Green fee après 16h','49 €'],['Seau de 50 balles','7 €']],
+   phone:'05 59 20 30 30',rating:'4,9',desc:'Parcours spectaculaire sur les falaises entre Saint-Jean-de-Luz et Hendaye. Chaque trou offre une vue sur l’océan ou la Rhune. Vent à prévoir : un vrai test de golf.',
+   news:[{d:'17',m:'oct.',t:'Trophée de la Corniche : inscriptions ouvertes',s:'Stroke play sur 2 jours, réservé aux membres du club. 80 places.'}],comps:['c3']},
+  {id:'marensin',name:'Golf du Marensin',town:'Léon',partner:false,holes:[9],par:35,len:'2 740 m',dist:'18 km',x:140,y:138,scene:'lake',
+   services:['practice','restaurant','beginner','rental'],hours:'8h30 – 19h00',gf:[['Green fee 9 trous','29 €'],['Green fee 2 × 9 trous','45 €'],['Seau de 40 balles','5 €']],
+   phone:'05 58 48 70 70',rating:'4,5',desc:'9 trous familial au bord du courant d’Huchet. Idéal pour débuter ou enchaîner deux boucles. Restaurant avec terrasse sur le lac.',
+   news:[{d:'10',m:'oct.',t:'Initiation gratuite tous les samedis',s:'De 10h à 11h30, clubs prêtés. Sur réservation.'}],comps:['c4']},
+  {id:'lac',name:'Golf du Lac Marin',town:'Hossegor',partner:false,holes:[18],par:71,len:'5 940 m',dist:'2 km',x:132,y:196,scene:'lake',
+   services:['practice','restaurant','proshop','lessons'],hours:'8h00 – 19h00',gf:[['Green fee 18 trous semaine','58 €'],['Green fee 18 trous week-end','72 €'],['Green fee 9 trous','35 €']],
+   phone:'05 58 43 56 56',rating:'4,6',desc:'Parcours boisé historique autour du lac marin d’Hossegor. Fairways étroits bordés de pins et de chênes-lièges : la précision prime sur la longueur.',
+   news:[{d:'14',m:'oct.',t:'Coupe du Lac : liste d’attente ouverte',s:'La compétition du 29 novembre affiche complet pour les membres.'}],comps:['c6']},
+  {id:'capbreton',name:'Practice Océan Capbreton',town:'Capbreton',partner:false,holes:[],par:null,len:'',dist:'5 km',x:120,y:222,scene:'practice',
+   services:['practice','rental','beginner','lessons'],hours:'9h00 – 21h00',gf:[['Seau de 50 balles','5 €'],['Carte 10 seaux','40 €'],['Cours collectif 1h','25 €']],
+   phone:'05 58 72 15 15',rating:'4,4',desc:'Practice couvert de 24 postes, putting green et zone d’approche, ouvert tard le soir. Cours collectifs tous niveaux.',
+   news:[{d:'8',m:'oct.',t:'Nocturnes éclairées jusqu’à 21h',s:'Le practice reste ouvert en soirée tout l’hiver.'}],comps:[]},
+  {id:'adour',name:'Golf de l’Adour',town:'Bayonne',partner:false,holes:[9],par:34,len:'2 480 m',dist:'32 km',x:156,y:244,scene:'river',
+   services:['practice','beginner','rental'],hours:'8h30 – 18h30',gf:[['Green fee 9 trous','26 €'],['Green fee 2 × 9 trous','40 €']],
+   phone:'05 59 55 80 80',rating:'4,3',desc:'Compact 9 trous le long des barthes de l’Adour, à 10 minutes du centre de Bayonne. Parfait pour une partie rapide après le travail.',
+   news:[{d:'6',m:'oct.',t:'Parcours ouvert malgré les travaux du club-house',s:'Vestiaires provisoires jusqu’à fin novembre.'}],comps:[]},
+  {id:'ursuya',name:'Golf du Val d’Ursuya',town:'Hasparren',partner:false,holes:[18],par:72,len:'6 010 m',dist:'48 km',x:224,y:282,scene:'basque',
+   services:['practice','restaurant','rental','hotel'],hours:'8h00 – 19h00',gf:[['Green fee 18 trous semaine','55 €'],['Green fee 18 trous week-end','68 €'],['Green fee 9 trous','34 €']],
+   phone:'05 59 29 60 60',rating:'4,6',desc:'Parcours vallonné au pied du mont Ursuya, dans la campagne basque. Dénivelé marqué, voiturette conseillée. Hôtel-restaurant dans une ferme rénovée.',
+   news:[{d:'11',m:'oct.',t:'Challenge Hivernal : formule Chapman',s:'Nouvelle formule par équipes de deux, ouverte à tous.'}],comps:['c5']},
+  {id:'dax',name:'Golf des Barthes de Dax',town:'Dax',partner:false,holes:[18],par:72,len:'6 080 m',dist:'38 km',x:216,y:152,scene:'river',
+   services:['practice','restaurant','proshop','lessons','beginner'],hours:'8h00 – 19h00',gf:[['Green fee 18 trous semaine','52 €'],['Green fee 18 trous week-end','64 €'],['Green fee 9 trous','32 €']],
+   phone:'05 58 90 40 40',rating:'4,5',desc:'Parcours plat et large dans les barthes de l’Adour, très accessible. Belle école de golf et tarifs doux.',
+   news:[{d:'9',m:'oct.',t:'Journée portes ouvertes le 2 novembre',s:'Découverte gratuite du parcours et du practice.'}],comps:[]},
+  {id:'bidart',name:'Golf des Falaises de Bidart',town:'Bidart',partner:false,holes:[9],par:33,len:'2 210 m',dist:'40 km',x:134,y:278,scene:'dune',
+   services:['practice','restaurant'],hours:'8h30 – 19h00',gf:[['Green fee 9 trous','34 €'],['Green fee 2 × 9 trous','52 €']],
+   phone:'05 59 47 90 90',rating:'4,4',desc:'9 trous face à l’océan sur les hauteurs de Bidart. Courts mais techniques, avec le vent comme adversaire principal.',
+   news:[{d:'5',m:'oct.',t:'Nouveau chef au restaurant',s:'Carte basque de saison, ouverte aux non-golfeurs.'}],comps:[]},
+];
+const COMPS = [
+  {id:'c1',title:'Coupe de la Dune',date:'2026-10-24',golf:'dune',format:'Stableford',open:true,price:'45 €',spots:12,total:96,tee:'Départs 8h30 – 11h00',series:'Individuel · 2 séries',
+   desc:'Compétition de clôture de la saison estivale, suivie d’un déjeuner au club-house. Ouverte aux non-membres avec index.'},
+  {id:'c2',title:'Scramble d’Automne',date:'2026-11-01',golf:'moliets',format:'Scramble',open:true,price:'60 € / équipe',spots:8,total:40,tee:'Shotgun 9h30',series:'Scramble à 2 · brut et net',
+   desc:'Scramble convivial dans la pinède. Formule idéale pour jouer avec un ami moins classé. Lots offerts par le pro-shop.'},
+  {id:'c3',title:'Trophée de la Corniche',date:'2026-11-07',golf:'corniche',format:'Stroke play',open:false,price:'35 €',spots:21,total:80,tee:'Départs 8h00 – 12h00 · 2 jours',series:'Individuel · 36 trous',
+   desc:'Le rendez-vous majeur du club : stroke play sur deux jours, classement général et par série. Réservé aux membres du club.'},
+  {id:'c4',title:'Open du Marensin',date:'2026-11-15',golf:'marensin',format:'Stableford',open:true,price:'25 €',spots:30,total:60,tee:'Départs 9h00 – 12h30',series:'Individuel · 18 trous (2 × 9)',
+   desc:'Open accessible à tous, y compris aux joueurs sans index (classement « découverte »). Barbecue à l’arrivée.'},
+  {id:'c5',title:'Challenge Hivernal',date:'2026-11-21',golf:'ursuya',format:'Chapman',open:true,price:'70 € / équipe',spots:14,total:36,tee:'Shotgun 10h00',series:'Chapman à 2 · net',
+   desc:'Formule Chapman par équipes de deux, au pied de l’Ursuya. Voiturette incluse dans l’inscription.'},
+  {id:'c6',title:'Coupe du Lac',date:'2026-11-29',golf:'lac',format:'Stableford',open:false,price:'30 €',spots:0,total:72,tee:'Départs 8h30 – 11h30',series:'Individuel · 3 séries',
+   desc:'Compétition de fin d’année des membres du Golf du Lac Marin. Complet : liste d’attente ouverte.'},
+  {id:'c7',title:'Pro-Am de Noël',date:'2026-12-05',golf:'dune',format:'Scramble',open:true,price:'120 € / équipe',spots:6,total:24,tee:'Shotgun 9h00',series:'Scramble à 4 avec un pro',
+   desc:'Jouez aux côtés d’un pro de la région dans une ambiance festive. Déjeuner et remise des prix inclus.'},
+  {id:'c8',title:'Stableford de l’Avent',date:'2026-12-13',golf:'dax',format:'Stableford',open:true,price:'28 €',spots:40,total:80,tee:'Départs 9h00 – 12h00',series:'Individuel · 2 séries',
+   desc:'Dernière compétition ouverte de l’année dans les Landes. Vin chaud offert au club-house.'},
+];
+const PROS = {
+  julien:{n:'Julien Etcheverry',c:'Pro au Golf de la Dune d’Argent',ini:'JE'},
+  maialen:{n:'Maialen Garat',c:'Pro au Golf de la Corniche Basque',ini:'MG'},
+  thomas:{n:'Thomas Lahitte',c:'Pro au Golf des Pins de Moliets',ini:'TL'},
+  claire:{n:'Claire Dubosc',c:'Préparatrice mentale · Golf du Lac Marin',ini:'CD'},
+};
+const TIPS = [
+  {id:'t1',free:true,cat:'Technique',title:'Le grip en 3 points',pro:'julien',dur:'Vidéo · 4 min',cover:'c1',icon:'play',
+   body:`<p>Un bon grip règle 80 % des slices que je vois au practice. Trois repères simples à vérifier avant chaque coup :</p><ol><li><b>La main gauche tient le club dans les doigts</b>, pas dans la paume. Vous devez voir deux phalanges en regardant votre main.</li><li><b>Le « V » formé par le pouce et l’index</b> de chaque main pointe vers votre épaule droite.</li><li><b>Pression 4/10.</b> Serrez comme si vous teniez un tube de dentifrice ouvert : fermement, sans le faire sortir.</li></ol><h4>Exercice</h4><p>Dix swings à vide en vérifiant les trois points, puis dix balles au fer 7. Notez la direction de vos balles : si elles partent à droite, relâchez la pression.</p>`},
+  {id:'t2',free:true,cat:'Préparation',title:'Échauffement en 5 minutes avant le départ',pro:'maialen',dur:'Lecture · 3 min',cover:'c2',icon:'dumbbell',
+   body:`<p>Arriver au tee du 1 sans échauffement, c’est jouer les trois premiers trous à froid. Voici ma routine express.</p><ol><li><b>1 min · Mobilité des hanches :</b> rotations lentes, club posé sur les épaules.</li><li><b>1 min · Épaules et dos :</b> 10 swings à vide avec deux clubs ensemble.</li><li><b>2 min · Petit jeu :</b> 5 chips et 5 putts de 1 mètre pour sentir le rythme.</li><li><b>1 min · Visualisation :</b> fermez les yeux, imaginez le trou 1 et le coup que vous voulez jouer.</li></ol><p>Astuce : commencez toujours par le club le plus court et finissez par le driver.</p>`},
+  {id:'t3',free:false,cat:'Petit jeu',title:'Sortir d’un bunker à coup sûr',pro:'julien',dur:'Vidéo · 6 min',cover:'c3',icon:'play'},
+  {id:'t4',free:false,cat:'Programme',title:'4 semaines pour gagner 10 m au drive',pro:'thomas',dur:'Programme · 8 séances',cover:'c1',icon:'dumbbell'},
+  {id:'t5',free:false,cat:'Putting',title:'Lecture de green : la méthode des pieds',pro:'maialen',dur:'Vidéo · 5 min',cover:'c2',icon:'green'},
+  {id:'t6',free:false,cat:'Mental',title:'Rester calme après un double bogey',pro:'claire',dur:'Audio · 9 min',cover:'c4',icon:'brain'},
+  {id:'t7',free:false,cat:'Parcours',title:'Jouer par vent d’ouest sur la Corniche',pro:'maialen',dur:'Vidéo · 7 min',cover:'c5',icon:'wind'},
+  {id:'t8',free:false,cat:'Programme',title:'Passer sous 20 d’index cet hiver',pro:'thomas',dur:'Programme · 6 semaines',cover:'c3',icon:'trophy'},
+];
+
+/* =========================================================
+   Utilitaires
+   ========================================================= */
+const $ = s => document.querySelector(s);
+const golfById = id => GOLFS.find(g=>g.id===id);
+const fmtDay = iso => new Date(iso+'T12:00:00').toLocaleDateString('fr-FR',{weekday:'short'}).replace('.','');
+const fmtMonthShort = iso => new Date(iso+'T12:00:00').toLocaleDateString('fr-FR',{month:'short'}).replace('.','');
+const fmtLong = iso => new Date(iso+'T12:00:00').toLocaleDateString('fr-FR',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+const monthKey = iso => new Date(iso+'T12:00:00').toLocaleDateString('fr-FR',{month:'long',year:'numeric'});
+const cap = s => s.charAt(0).toUpperCase()+s.slice(1);
+const holesLabel = g => g.holes.length ? g.holes.map(h=>h+' trous').join(' + ') : 'Practice';
+let toastTimer;
+function toast(msg){
+  const t=$('#toast'); t.innerHTML = ic('check')+'<span>'+msg+'</span>'; t.classList.add('show');
+  clearTimeout(toastTimer); toastTimer=setTimeout(()=>t.classList.remove('show'),2600);
+}
+
+/* =========================================================
+   Navigation
+   ========================================================= */
+const history_ = [];
+let current = null;
+function showScreen(id, anim){
+  const next = document.getElementById('screen-'+id);
+  if(!next) return;
+  if(current && current!==next) current.classList.remove('active','in-fade','in-slide','in-back');
+  next.classList.remove('in-fade','in-slide','in-back');
+  void next.offsetWidth; // relance l’animation
+  next.classList.add('active', anim);
+  next.scrollTop = 0;
+  current = next;
+  const tab = next.dataset.tab;
+  document.querySelectorAll('.tab').forEach(b=>b.classList.toggle('on', b.dataset.tab===tab));
+}
+function go(id){ // écran secondaire (avec retour)
+  if(current) history_.push(current.id.replace('screen-',''));
+  showScreen(id,'in-slide');
+}
+function goTab(id){ history_.length=0; showScreen(id,'in-fade'); }
+function back(){
+  const prev = history_.pop();
+  if(prev) showScreen(prev,'in-back'); else goTab(current.dataset.tab);
+}
+document.querySelectorAll('.tab').forEach(b=>b.addEventListener('click',()=>goTab(b.dataset.tab)));
+document.addEventListener('click', e=>{
+  const el = e.target.closest('[data-go],[data-back],[data-tab-go],[data-toast],[data-golf],[data-comp],[data-tip]');
+  if(!el) return;
+  if(el.hasAttribute('data-back')) return back();
+  if(el.dataset.tabGo) return goTab(el.dataset.tabGo);
+  if(el.dataset.golf){ renderGolf(el.dataset.golf); return go('golf'); }
+  if(el.dataset.comp){ renderComp(el.dataset.comp); return go('comp'); }
+  if(el.dataset.tip){ const t=TIPS.find(t=>t.id===el.dataset.tip); if(t.free){ renderTip(t); return go('tip'); } toast('Contenu réservé aux Membres'); return go('member'); }
+  if(el.dataset.go) return go(el.dataset.go);
+  if(el.dataset.toast) return toast(el.dataset.toast);
+});
+
+/* =========================================================
+   Carte & liste des golfs
+   ========================================================= */
+const activeFilters = new Set();
+let query = '';
+function matches(g){
+  if(query && !(g.name+' '+g.town).toLowerCase().includes(query)) return false;
+  for(const f of activeFilters){
+    if(f==='9'||f==='18'){ if(!g.holes.includes(+f)) return false; }
+    else if(!g.services.includes(f)) return false;
+  }
+  return true;
+}
+function renderFilters(){
+  $('#filters').innerHTML = FILTERS.map(f=>`<button class="chip ${activeFilters.has(f.k)?'on':''}" data-filter="${f.k}" aria-pressed="${activeFilters.has(f.k)}">${ic(f.i)}${f.l}</button>`).join('');
+  $('#filters').querySelectorAll('[data-filter]').forEach(b=>b.addEventListener('click',()=>{
+    const k=b.dataset.filter; activeFilters.has(k)?activeFilters.delete(k):activeFilters.add(k); renderFilters(); renderGolfList(); updatePins();
+  }));
+}
+function renderMap(){
+  // [nom, x, y, ancrage du libellé : 'l' = à gauche du point (côte), 'r' = à droite]
+  const towns = [['Mimizan',128,42,'r'],['Moliets',110,116,'l'],['Léon',144,130,'r'],['Dax',214,163,'r'],['Hossegor',108,197,'l'],['Capbreton',104,216,'l'],['Bayonne',152,254,'r'],['Biarritz',116,273,'l'],['Saint-Jean-de-Luz',150,295,'l'],['Hasparren',230,272,'r'],['Hendaye',168,312,'l']];
+  const pins = [...GOLFS].sort((a,b)=>a.y-b.y).map(g=>`
+    <g class="pin ${g.partner?'partner':''}" data-golf="${g.id}" style="--x:${g.x}px;--y:${g.y}px" transform="translate(${g.x} ${g.y})" role="button" tabindex="0" aria-label="${g.name}">
+      ${g.partner?'<circle class="ring" cx="0" cy="-2" r="6"/>':''}
+      <path class="body" d="M0 0 C-9 -9 -11 -14 -11 -19 A11 11 0 0 1 11 -19 C11 -14 9 -9 0 0Z"/>
+      ${g.partner?`<path d="M0 -24.5l1.6 3.3 3.6.5-2.6 2.5.6 3.6L0 -16.3l-3.2 1.7.6-3.6-2.6-2.5 3.6-.5z" fill="#2A1F05"/>`:`<circle cx="0" cy="-19" r="3.5" fill="#fff"/>`}
+    </g>`).join('');
+  $('#map').innerHTML = `
+    <rect width="390" height="320" fill="#BFE0EA"/>
+    <g opacity=".5">${[24,72,120,168,216,264,304].map(y=>`<path d="M0 ${y} q20 -4 40 0 t40 0 t40 0" stroke="#fff" stroke-width="1.2" fill="none"/>`).join('')}</g>
+    <path d="M118 0 L390 0 L390 320 L180 320 C 166 306 150 292 140 280 C 126 266 112 248 106 230 C 98 200 100 178 102 154 C 106 107 110 47 118 0 Z" fill="#E8F1E3" stroke="#9FC2AE" stroke-width="1.5"/>
+    <path d="M118 0 L390 0 L390 190 L300 200 C 240 178 180 200 130 178 C 110 142 112 71 118 0Z" fill="url(#forest)" opacity=".9"/>
+    <path d="M180 320 L390 284 L390 320Z" fill="#E6E1D3" stroke="#B9B3A3" stroke-width="1" stroke-dasharray="3 3"/>
+    <path d="M105 228 C 150 232 190 214 240 216 C 280 218 320 208 390 214" stroke="#8FC2D4" stroke-width="3" fill="none"/>
+    <path d="M152 254 C 172 270 190 282 210 310" stroke="#8FC2D4" stroke-width="2" fill="none"/>
+    <ellipse cx="126" cy="140" rx="8" ry="5" fill="#8FC2D4"/><ellipse cx="116" cy="198" rx="4" ry="8" fill="#8FC2D4"/><ellipse cx="130" cy="46" rx="7" ry="4" fill="#8FC2D4"/>
+    <path d="M126 24 C 128 107 118 178 130 237 C 140 272 170 285 240 275" stroke="#fff" stroke-width="3" fill="none" stroke-dasharray="6 5" opacity=".9"/>
+    <text class="region" x="250" y="95">LANDES</text><text class="region" x="262" y="250">PAYS BASQUE</text><text class="region" x="318" y="314" font-size="9">ESPAGNE</text>
+    <text class="region" x="18" y="160" font-size="10" fill="#2E6B86">OCÉAN</text><text class="region" x="18" y="173" font-size="10" fill="#2E6B86">ATLANTIQUE</text>
+    ${towns.map(([n,x,y,a])=>`<circle cx="${x}" cy="${y}" r="2" fill="#1F3A2E"/><text class="town" x="${a==='l'?x-5:x+5}" y="${y+3}" text-anchor="${a==='l'?'end':'start'}">${n}</text>`).join('')}
+    <g transform="translate(112 206)"><circle r="9" fill="#2F80ED" opacity=".25"/><circle r="4" fill="#2F80ED" stroke="#fff" stroke-width="2"/></g>
+    ${pins}`;
+  $('#map').querySelectorAll('.pin').forEach(p=>p.addEventListener('keydown',e=>{ if(e.key==='Enter'||e.key===' '){ e.preventDefault(); p.click(); }}));
+}
+function updatePins(){ $('#map').querySelectorAll('.pin').forEach(p=>p.classList.toggle('hidden', !matches(golfById(p.dataset.golf)))); }
+function golfCard(g){
+  const cheapest = g.holes.length ? g.gf.find(r=>r[0].includes('9 trous')) || g.gf[0] : g.gf[0];
+  return `<button class="gcard ${g.partner?'partner':''}" data-golf="${g.id}">
+    <div class="thumb">${scene(g.scene)}</div>
+    <div class="body">
+      <div class="name">${g.name}${g.partner?`<span class="badge">${ic('star','')}Partenaire</span>`:''}</div>
+      <div class="meta">${holesLabel(g)}${g.par?' · Par '+g.par:''} · ${g.town} · ${g.dist}</div>
+      <div class="foot">
+        <div class="svcs">${g.services.slice(0,4).map(s=>`<span title="${SERVICES[s].l}">${ic(SERVICES[s].i,'')}</span>`).join('')}</div>
+        <div class="price">dès ${cheapest[1].replace(/ \/.*$/,'')}${g.holes.length?'':' <small>le seau</small>'}</div>
+      </div>
+    </div></button>`;
+}
+function renderGolfList(){
+  const list = GOLFS.filter(matches).sort((a,b)=> (b.partner-a.partner) || parseInt(a.dist)-parseInt(b.dist));
+  $('#list-title').textContent = list.length ? `${list.length} golf${list.length>1?'s':''} près de vous` : 'Aucun golf';
+  $('#golf-list').innerHTML = list.length ? list.map(golfCard).join('') : `<div class="empty">Aucun golf ne correspond à ces filtres.<br>Essayez d’en retirer un.</div>`;
+}
+$('#search').addEventListener('input', e=>{ query=e.target.value.trim().toLowerCase(); renderGolfList(); updatePins(); });
+
+/* =========================================================
+   Fiche golf
+   ========================================================= */
+function renderGolf(id){
+  const g = golfById(id);
+  const all = Object.keys(SERVICES);
+  const comps = g.comps.map(c=>COMPS.find(x=>x.id===c));
+  $('#golf-detail').innerHTML = `
+    <div class="hero">${scene(g.scene)}<div class="grad"></div>
+      <div class="float"><button class="iconbtn ghost" data-back aria-label="Retour">${ic('back')}</button>
+        <div style="display:flex;gap:8px"><button class="iconbtn ghost" data-toast="Ajouté à vos favoris" aria-label="Ajouter aux favoris">${ic('heart')}</button><button class="iconbtn ghost" data-toast="Lien de la fiche copié" aria-label="Partager">${ic('share')}</button></div></div>
+      <div class="title">${g.partner?`<span class="badge">${ic('star','')}Partenaire</span>`:''}<h2>${g.name}</h2><div class="sub">${ic('route','ic')}<span style="font-size:14px">${g.town} · ${g.dist} · ★ ${g.rating}</span></div></div>
+    </div>
+    <div class="facts">
+      <div class="fact"><b>${g.holes.length? g.holes.join('+'):'24'}</b><span>${g.holes.length?'trous':'postes'}</span></div>
+      <div class="fact"><b>${g.par?g.par:'—'}</b><span>par</span></div>
+      <div class="fact"><b>${g.len||'Couvert'}</b><span>${g.len?'longueur':'practice'}</span></div>
+    </div>
+    <div class="actions">
+      <button class="btn primary" data-toast="Ouverture de l’itinéraire vers ${g.town}…">${ic('route')}Itinéraire</button>
+      <button class="btn outline" data-toast="Appel du ${g.phone}…">${ic('phone')}Appeler</button>
+    </div>
+    <p class="desc">${g.desc}</p>
+    <div class="sec pad"><div class="sec-h"><h3>Services</h3></div>
+      <div class="services">${all.map(s=>`<div class="svc ${g.services.includes(s)?'':'off'}"><div class="i">${ic(SERVICES[s].i)}</div><span>${SERVICES[s].l}</span></div>`).join('')}</div></div>
+    <div class="sec pad"><div class="sec-h"><h3>Horaires &amp; tarifs</h3></div>
+      <div class="info-card">
+        <div class="row"><span class="l">${ic('clock')}Ouvert aujourd’hui</span><b>${g.hours}</b></div>
+        ${g.gf.map(r=>`<div class="row"><span class="l">${ic('euro')}${r[0]}</span><b>${r[1]}</b></div>`).join('')}
+        <div class="row"><span class="l">${ic('phone')}Téléphone</span><b>${g.phone}</b></div>
+      </div></div>
+    <div class="sec pad"><div class="sec-h"><h3>Actualités du club</h3></div>
+      <div class="news">${g.news.map(n=>`<div class="news-item"><div class="date"><b>${n.d}</b><span>${n.m}</span></div><div><div class="t">${n.t}</div><div class="d">${n.s}</div></div></div>`).join('')}</div></div>
+    <div class="sec pad"><div class="sec-h"><h3>Prochaines compétitions</h3><button class="link" data-tab-go="comps">Tout l’agenda</button></div>
+      ${comps.length? `<div class="comp-list" style="padding:0">${comps.map(compCard).join('')}</div>` : `<div class="info-card" style="font-weight:600;color:var(--ink2)">Aucune compétition annoncée pour le moment.</div>`}
+    </div>
+    <div class="bottom-space"></div>`;
+}
+
+/* =========================================================
+   Compétitions
+   ========================================================= */
+const compFilter = {date:'all', format:'all', open:false};
+const DATE_F = [['all','Toutes dates'],['month','Ce mois-ci'],['next','Mois prochain']];
+const FORMAT_F = [['all','Toutes formules'],['Stableford','Stableford'],['Scramble','Scramble'],['Stroke play','Stroke play'],['Chapman','Chapman']];
+function compCard(c){
+  const g = golfById(c.golf);
+  return `<button class="ccard ${g.partner?'partner':''}" data-comp="${c.id}">
+    <div class="date"><b>${+c.date.slice(8)}</b><span>${fmtMonthShort(c.date)}</span><small>${fmtDay(c.date)}</small></div>
+    <div class="body"><div class="t">${c.title}</div>
+      <div class="g">${g.name}${g.partner?`<span class="badge">${ic('star','')}Partenaire</span>`:''}</div>
+      <div class="tags"><span class="tag">${c.format}</span><span class="tag ${c.open?'open':'closed'}">${c.open?'Ouvert à tous':'Membres du club'}</span>${c.spots===0?'<span class="tag closed">Complet</span>':c.spots<=8?`<span class="tag gold">${c.spots} places</span>`:''}</div>
+    </div>${ic('chev','ic')}</button>`;
+}
+function renderCompFilters(){
+  $('#comp-date-filters').innerHTML = DATE_F.map(([k,l])=>`<button class="chip ${compFilter.date===k?'on':''}" data-cf="date" data-v="${k}">${ic('cal')}${l}</button>`).join('');
+  $('#comp-format-filters').innerHTML = FORMAT_F.map(([k,l])=>`<button class="chip ${compFilter.format===k?'on':''}" data-cf="format" data-v="${k}">${l}</button>`).join('');
+  document.querySelectorAll('[data-cf]').forEach(b=>b.addEventListener('click',()=>{ compFilter[b.dataset.cf]=b.dataset.v; renderCompFilters(); renderComps(); }));
+  $('#open-only').classList.toggle('on',compFilter.open); $('#open-only').setAttribute('aria-checked',compFilter.open);
+}
+$('#open-only').addEventListener('click',()=>{ compFilter.open=!compFilter.open; renderCompFilters(); renderComps(); });
+function renderComps(){
+  const list = COMPS.filter(c=>{
+    const m = +c.date.slice(5,7);
+    if(compFilter.date==='month' && m!==10) return false;
+    if(compFilter.date==='next' && m!==11) return false;
+    if(compFilter.format!=='all' && c.format!==compFilter.format) return false;
+    if(compFilter.open && !c.open) return false;
+    return true;
+  }).sort((a,b)=>a.date.localeCompare(b.date));
+  let html='', lastMonth='';
+  for(const c of list){
+    const mk = cap(monthKey(c.date));
+    if(mk!==lastMonth){ html += (lastMonth?'</div>':'') + `<div class="month">${mk}</div><div class="comp-list">`; lastMonth=mk; }
+    html += compCard(c);
+  }
+  html += lastMonth?'</div>':'';
+  $('#comp-list').innerHTML = list.length? html : `<div class="empty">Aucune compétition pour ces critères.</div>`;
+}
+function renderComp(id){
+  const c = COMPS.find(x=>x.id===id), g = golfById(c.golf);
+  const full = c.spots===0;
+  $('#comp-detail').innerHTML = `
+    <div class="comp-hero">
+      <button class="iconbtn ghost" data-back aria-label="Retour" style="color:var(--ink)">${ic('back')}</button>
+      <div style="margin-top:10px;display:flex;gap:6px;flex-wrap:wrap"><span class="tag" style="background:rgba(255,255,255,.16);color:#fff">${c.format}</span><span class="tag ${c.open?'open':'closed'}">${c.open?'Ouvert aux non-membres':'Réservé aux membres du club'}</span></div>
+      <h2>${c.title}</h2>
+      <div class="meta">${cap(fmtLong(c.date))}</div>
+      <div class="meta" style="display:flex;align-items:center;gap:6px;margin-top:8px">${ic('route')}<span>${g.name} · ${g.town}</span>${g.partner?`<span class="badge">${ic('star','')}Partenaire</span>`:''}</div>
+    </div>
+    <div class="kpis">
+      <div class="kpi"><b>${c.price}</b><span>inscription</span></div>
+      <div class="kpi"><b>${full?'Complet':c.spots+' / '+c.total}</b><span>places restantes</span></div>
+      <div class="kpi"><b>${g.holes.length?g.holes[g.holes.length-1]+' trous':'—'}</b><span>parcours</span></div>
+    </div>
+    <div class="sec pad"><div class="info-card">
+      <div class="row"><span class="l">${ic('clock')}Horaires</span><b>${c.tee}</b></div>
+      <div class="row"><span class="l">${ic('trophy')}Formule</span><b>${c.series}</b></div>
+      <div class="row"><span class="l">${ic('users')}Accès</span><b>${c.open?'Tous, avec index':'Membres du club'}</b></div>
+      <div class="row"><span class="l">${ic('cal')}Clôture</span><b>Veille à 18h</b></div>
+    </div></div>
+    <p class="desc" style="margin-top:16px">${c.desc}</p>
+    <div class="sec pad"><div class="sec-h"><h3>Lieu</h3></div>
+      <button class="gcard ${g.partner?'partner':''}" data-golf="${g.id}"><div class="thumb">${scene(g.scene)}</div><div class="body"><div class="name">${g.name}</div><div class="meta">${holesLabel(g)}${g.par?' · Par '+g.par:''} · ${g.town}</div><div class="foot"><span class="price">Voir la fiche du golf</span>${ic('chev','ic')}</div></div></button>
+    </div>
+    <div class="cta-bar">
+      ${full ? `<button class="btn ghost" data-toast="Inscrit sur la liste d’attente">${ic('users')}Rejoindre la liste d’attente</button>`
+        : c.open ? `<button class="btn primary" data-toast="Inscription confirmée pour ${c.title} ✅">${ic('trophy')}S’inscrire · ${c.price}</button>`
+        : `<button class="btn ghost" data-toast="Demande envoyée au club">${ic('lock')}Réservé aux membres · Contacter le club</button>`}
+      <p class="note">Annulation gratuite jusqu’à 48 h avant le départ.</p>
+    </div>`;
+}
+
+/* =========================================================
+   Astuces
+   ========================================================= */
+function tipCard(t){
+  const p = PROS[t.pro];
+  return `<button class="tcard ${t.free?'':'locked'}" data-tip="${t.id}">
+    <div class="cover ${t.cover}">${ic(t.icon)}</div>
+    <div class="body"><div class="cat">${t.cat}</div><div class="t">${t.title}</div><div class="pro">${p.n} · ${p.c.replace('Pro au ','').replace('Préparatrice mentale · ','')}</div><div class="dur">${ic(t.dur.startsWith('Vidéo')?'play':t.dur.startsWith('Audio')?'brain':t.dur.startsWith('Programme')?'dumbbell':'bulb','')}${t.dur}</div></div>
+    <span class="lock ${t.free?'free':''}" aria-label="${t.free?'Gratuit':'Réservé aux Membres'}">${t.free?ic('check',''):ic('lock','')}</span>
+  </button>`;
+}
+function renderTips(){
+  $('#tips-free').innerHTML = TIPS.filter(t=>t.free).map(tipCard).join('');
+  $('#tips-locked').innerHTML = TIPS.filter(t=>!t.free).map(tipCard).join('');
+}
+function renderTip(t){
+  const p = PROS[t.pro];
+  $('#tip-detail').innerHTML = `
+    <div class="topbar"><button class="iconbtn" data-back aria-label="Retour">${ic('back')}</button><h2>${t.cat}</h2><span class="badge soft">${ic('check','')}Gratuit</span></div>
+    <div class="pad"><div class="tcard" style="padding:0;box-shadow:none;background:transparent"><div class="cover ${t.cover}" style="width:100%;height:150px">${ic(t.icon)}</div></div></div>
+    <h2 class="pad" style="font-size:24px;font-weight:800;letter-spacing:-.02em;line-height:1.15;margin-top:14px">${t.title}</h2>
+    <div class="pro-card"><div class="avatar">${p.ini}</div><div><b>${p.n}</b><span>${p.c}</span></div></div>
+    <div class="tip-body" style="margin-top:14px">${t.body}</div>
+    <div class="pad" style="margin-top:22px"><button class="btn gold" data-go="member">${ic('star')}Débloquer les 120 autres contenus</button></div>
+    <div class="bottom-space"></div>`;
+}
+
+/* =========================================================
+   Démarrage
+   ========================================================= */
+function tick(){ const d=new Date(); $('#clock').textContent = d.getHours()+':'+String(d.getMinutes()).padStart(2,'0'); }
+tick(); setInterval(tick,30000);
+renderFilters(); renderMap(); renderGolfList(); renderCompFilters(); renderComps(); renderTips();
+showScreen('map','in-fade');
+</script>
+</body>
+</html>
