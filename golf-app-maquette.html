@@ -2,7 +2,7 @@
 <html lang="fr">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Golf App — Maquette interactive</title>
 <meta name="description" content="Maquette interactive de Golf App : cartographie des golfs, compétitions et contenus exclusifs. Données de démonstration.">
 <style>
@@ -357,6 +357,20 @@ svg{display:block}
   .frame{border-radius:34px}
   .services{grid-template-columns:repeat(4,1fr)}
 }
+/* Mode plein écran (présentation depuis un vrai téléphone) */
+.fs-btn{display:none;margin-top:18px;height:48px;padding:0 20px;border-radius:14px;background:var(--gold);color:#2A1F05;font-weight:800;font-size:15px;align-items:center;gap:8px}
+.fs-btn svg{stroke:#2A1F05}
+@media (max-width:980px){.fs-btn{display:inline-flex}}
+.fs-exit{display:none;position:fixed;top:max(8px,env(safe-area-inset-top));right:8px;z-index:100;width:34px;height:34px;border-radius:50%;background:rgba(14,31,24,.55);color:#fff;align-items:center;justify-content:center;font-size:18px;font-weight:800}
+body.fs{background:var(--g50)}
+body.fs .pitch,body.fs .demo-note,body.fs .notch,body.fs .statusbar{display:none}
+body.fs .fs-exit{display:flex}
+body.fs .stage{padding:0;min-height:100vh;min-height:100dvh;gap:0}
+body.fs .phone-wrap{width:100%;gap:0}
+body.fs .phone{width:100%;height:100vh;height:100dvh;min-height:0;border-radius:0;padding:0;box-shadow:none;background:var(--g50)}
+body.fs .phone::before,body.fs .phone::after{display:none}
+body.fs .frame{border-radius:0;padding-top:max(10px,env(safe-area-inset-top))}
+body.fs .tabbar{padding-bottom:max(14px,env(safe-area-inset-bottom));height:auto}
 @media (prefers-reduced-motion:reduce){
   .screen.in-fade,.screen.in-slide,.screen.in-back{animation:none}
   .pin.partner .ring{animation:none}
@@ -404,7 +418,9 @@ svg{display:block}
       </div>
     </div>
     <p class="hint"><svg class="ic" viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg> Cliquez dans le téléphone pour naviguer entre les écrans.</p>
+    <button class="fs-btn" id="fs-on"><svg class="ic" viewBox="0 0 24 24"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg>Afficher en plein écran</button>
   </aside>
+  <button class="fs-exit" id="fs-off" aria-label="Quitter le plein écran">×</button>
 
   <!-- ===================== Phone ===================== -->
   <div class="phone-wrap">
@@ -1051,6 +1067,11 @@ function renderTip(t){
    ========================================================= */
 function tick(){ const d=new Date(); $('#clock').textContent = d.getHours()+':'+String(d.getMinutes()).padStart(2,'0'); }
 tick(); setInterval(tick,30000);
+/* Plein écran : bouton sur mobile, ou ?plein dans l’adresse */
+const setFs = on => { document.body.classList.toggle('fs', on); window.scrollTo(0,0); };
+$('#fs-on').addEventListener('click', ()=>setFs(true));
+$('#fs-off').addEventListener('click', ()=>setFs(false));
+if (new URLSearchParams(location.search).has('plein')) setFs(true);
 renderFilters(); renderMap(); renderGolfList(); renderCompFilters(); renderComps(); renderTips();
 showScreen('map','in-fade');
 </script>
